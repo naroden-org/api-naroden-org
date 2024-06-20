@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  app:
+    container_name: api
+    image: api-image:latest
+    restart: unless-stopped
+    ports:
+      - 3001:3001
+
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    container_name: surrealdb
+    restart: unless-stopped
+    command: start --user ${DB_USERNAME} --pass ${DB_PASSWORD} file:/data/database.db
+    ports:
+      - 8000:8000
+    volumes:
+      - ./data:/data
