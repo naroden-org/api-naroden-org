@@ -46,7 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let apis = (user::api::Api, jwt::api::Api);
     let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.1");
 
-    let server = api_service.server("http://localhost:3001");
+    let server = api_service.server("https://api.naroden.org");
     let swagger_ui = server.swagger_ui();
     let route = Route::new()
         .nest("/", server)
@@ -55,8 +55,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .data(db);
 
     println!("Starting api.naroden.org v0.0.1");
-    println!("service calls: http://localhost:3001");
-    println!("documentation: http://localhost:3001/docs");
+    println!("service calls: https://api.naroden.org");
+    println!("documentation: https://api.naroden.org/docs");
 
     Server::new(TcpListener::bind("0.0.0.0:3001"))
         .run(route)

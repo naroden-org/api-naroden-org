@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t api-image:latest -t api-image:run-${{ github.run_id }}-${{ github.run_attempt }} .
+        run: docker build -t api-image:latest .
 
       - name: Save Docker image as tar file
         run: docker save -o dist/api-image.tar api-image:latest
@@ -42,23 +42,17 @@ jobs:
         run: ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy with rsync
-        run: "rsync -v -e 'ssh -p 22 -v' --executability --prune-empty-dirs --recursive --links --owner --group --devices --specials --compress --verbose --checksum --delete-after  --filter 'protect .env' --exclude '.git/' --exclude '.vscode/' --exclude '.github/' --exclude '.idea/' --exclude '.env' --include='*' --delete-excluded --out-format='Action: %o -> %n - Last Modified: %M' --omit-dir-times --stats ./dist/ ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/var/www/api-db/"
-
-      # - name: Transfer Docker image to remote server
-      #   run: |
-      #     mkdir -p ~/.ssh
-      #     echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_rsa
-      #     chmod 600 ~/.ssh/id_rsa
-      #     scp -o StrictHostKeyChecking=no api-image.tar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:${{ secrets.REMOTE_SERVER_PATH }}
+        run: "rsync -v -e 'ssh -p 22 -v' --executability --prune-empty-dirs --recursive --links --owner --group --devices --specials --compress --verbose --checksum --delete-after --filter 'protect .env' --filter 'protect README' --exclude '.git/' --exclude '.vscode/' --exclude '.github/' --exclude '.idea/' --exclude '.env' --include='*' --delete-excluded --out-format='Action: %o -> %n - Last Modified: %M' --omit-dir-times --stats ./dist/ ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/var/www/api-db/"
 
       - name: Load Docker image on remote server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'ENDSSH'
+          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'ENDSSH'
           docker load -i /var/www/api-db/api-image.tar
+          docker tag api-image:latest api-image:run-${{ github.run_id }}-${{ github.run_attempt }}
           ENDSSH
 
       - name: Deploy Docker containers using Docker Compose on remote server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'ENDSSH'
+          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'ENDSSH'
           docker compose -f /var/www/api-db/docker-compose.yaml up -d
           ENDSSH
