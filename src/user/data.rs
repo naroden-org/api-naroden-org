@@ -30,7 +30,8 @@ pub enum ContactType {
 pub struct PostUserRequest {
     pub first_name: String,
     pub last_name: String,
-    pub email: String,
+    pub email: Option<String>,
+    pub phone: Option<String>,
     pub password: String,
     pub referral: Option<String>,
 }
@@ -47,17 +48,9 @@ pub struct GetUserRequest {
 #[derive(Object)]
 #[oai(rename_all = "camelCase")]
 pub struct UserResponse {
-    pub id: String,
     pub first_name: String,
     pub last_name: String,
-}
-
-impl From<User> for UserResponse {
-    fn from(user: User) -> Self {
-        UserResponse {
-            id: user.id.unwrap().to_string(),
-            first_name: user.first_name,
-            last_name: user.last_name,
-        }
-    }
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub phone_code: Option<i32>
 }
