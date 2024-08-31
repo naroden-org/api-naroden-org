@@ -1,0 +1,24 @@
+services:
+  app:
+    container_name: api
+    image: api-image:latest
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - 3001:3001
+    depends_on:
+      - surrealdb
+
+  surrealdb:
+    image: surrealdb/surrealdb:v1.4.2
+    container_name: surrealdb
+    restart: unless-stopped
+    command: start --log trace --auth --user ${DB_USERNAME} --pass ${DB_PASSWORD} file:/data/database.db
+    ports:
+      - 8000:8000
+    volumes:
+      - surrealdb_data:/data
+
+volumes:
+  surrealdb_data:
+    external: true

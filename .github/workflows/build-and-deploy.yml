@@ -1,0 +1,58 @@
+name: 'Build and Deploy docker image'
+on:
+  push:
+    branches: [ci]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "build-and-deploy"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t api-image:latest .
+
+      - name: Save Docker image as tar file
+        run: docker save -o dist/api-image.tar api-image:latest
+
+      - name: List details
+        run: |
+          pwd
+          ls -ltah
+          ls -ltah dist/
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: "generated"
+
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy with rsync
+        run: "rsync -v -e 'ssh -p 22 -v' --executability --prune-empty-dirs --recursive --links --owner --group --devices --specials --compress --verbose --checksum --delete-after --filter 'protect .env' --filter 'protect README' --exclude '.git/' --exclude '.vscode/' --exclude '.github/' --exclude '.idea/' --exclude '.env' --include='*' --delete-excluded --out-format='Action: %o -> %n - Last Modified: %M' --omit-dir-times --stats ./dist/ ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/var/www/api-db/"
+
+      - name: Load Docker image on remote server
+        run: |
+          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'ENDSSH'
+          docker load -i /var/www/api-db/api-image.tar
+          docker tag api-image:latest api-image:run-${{ github.run_id }}-${{ github.run_attempt }}
+          ENDSSH
+
+      - name: Deploy Docker containers using Docker Compose on remote server
+        run: |
+          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'ENDSSH'
+          docker compose -f /var/www/api-db/docker-compose.yaml up -d
+          ENDSSH
