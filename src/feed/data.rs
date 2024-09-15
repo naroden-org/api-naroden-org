@@ -3,7 +3,7 @@ use serde::{Serialize};
 
 #[derive(Object, Serialize)]
 #[oai(rename_all = "camelCase")]
-pub struct GetFeedResponse {
+pub struct GetAllFeedResponse {
     pub feed: Vec<Feed>,
 }
 
@@ -22,4 +22,12 @@ pub struct FeedButton {
     #[oai(rename = "type")]
     pub button_type: String,
     pub url: String,
+}
+
+#[derive(Object, Serialize)]
+pub struct FeedResponse {
+    pub title: String,
+    pub text: String,
+    pub image: String,
+    pub buttons: Vec<FeedButton>,
 }

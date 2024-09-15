@@ -32,6 +32,7 @@ pub struct PostUserRequest {
     pub last_name: String,
     pub email: Option<String>,
     pub phone: Option<String>,
+    pub phone_code: Option<String>,
     pub password: String,
     pub referral: Option<String>,
 }
