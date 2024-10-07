@@ -1,4 +1,4 @@
-use poem_openapi::OpenApi;
+use poem_openapi::{OpenApi};
 use poem_openapi::payload::Json;
 use crate::contacts::data::{GetContactsResponse, PostContactsRequest};
 

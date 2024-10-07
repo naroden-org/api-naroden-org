@@ -1,4 +1,4 @@
-use poem_openapi::OpenApi;
+use poem_openapi::{OpenApi};
 use poem_openapi::param::{Query};
 use poem_openapi::payload::Json;
 use crate::feed::data::{FeedResponse, GetAllFeedResponse};
@@ -9,7 +9,6 @@ pub fn get_default_feed_count() -> i32 { 20 }
 
 #[OpenApi]
 impl Api {
-
     #[oai(path = "/v1/feed", method = "get")]
     async fn getAll(&self,
                     id: Query<Option<String>>,

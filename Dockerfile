@@ -1,4 +1,4 @@
-FROM rust:1.77-slim-buster as build
+FROM rust:1.81-slim-buster as build
 
 # create a new empty shell project
 RUN USER=root cargo new --bin api-naroden-org

@@ -9,13 +9,15 @@ use crate::jwt::data::{Jwt, PostJwtResponse};
 
 pub struct Api;
 
+#[poem_grants::open_api]
 #[OpenApi]
 impl Api {
+    #[protect("NONE")]
     #[oai(path = "/v1/users", method = "post")]
     async fn create(&self, db: Data<&Surreal<Client>>, request: Json<PostUserRequest>) -> PostJwtResponse {
         let user: User = create(db.0, request.0.into()).await;
 
-        let jwt= Jwt {
+        let jwt = Jwt {
             token: "example".to_string(),
         };
 

@@ -1,9 +1,13 @@
+use std::collections::HashSet;
 use envconfig::Envconfig;
-use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server};
+use jsonwebtoken::{Algorithm, decode, DecodingKey, Validation};
+use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server, Request};
+use poem_grants::GrantsMiddleware;
 use poem_openapi::OpenApiService;
-use surrealdb::engine::remote::ws::{Client, Wss};
+use surrealdb::engine::remote::ws::{Client, Ws, Wss};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
+use crate::jwt::data::{JwtClaims, UserRole};
 
 mod error;
 mod jwt;
@@ -23,13 +27,21 @@ struct SecretConfig {
 
     #[envconfig(from = "DB_PASSWORD")]
     pub db_password: String,
+
+    #[envconfig(from = "JWT_HS256_KEY")] // twice
+    pub jwt_hs256_key: String,
 }
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = SecretConfig::init_from_env().unwrap();
+    let db: Surreal<Client> = if config.db_host.contains("localhost") {
+        Surreal::new::<Ws>(config.db_host).await?
+    } else {
+        Surreal::new::<Wss>(config.db_host).await?
+    };
 
-    let db: Surreal<Client> = Surreal::new::<Wss>(config.db_host).await?;
     db.signin(Root {
         username: config.db_username.as_str(),
         password: config.db_password.as_str(),
@@ -39,10 +51,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     db.use_ns("api").use_db("prod").await?;
 
     let sql_definitions = "
-        DEFINE FIELD in ON TABLE owns TYPE record<user>;
-        DEFINE FIELD out ON TABLE owns TYPE record<contact>;
-        DEFINE INDEX unique_owns_out ON TABLE owns COLUMNS out UNIQUE;
+        DEFINE FIELD in ON TABLE owns_contact TYPE record<user>;
+        DEFINE FIELD out ON TABLE owns_contact TYPE record<contact>;
+        DEFINE INDEX unique_owns_contact_out ON TABLE owns_contact COLUMNS out UNIQUE;
         DEFINE INDEX unique_contact_value ON TABLE contact COLUMNS value UNIQUE;
+
+        DEFINE FIELD in ON TABLE owns_tag TYPE record<user>;
+        DEFINE FIELD out ON TABLE owns_tag TYPE record<tag>;
+        DEFINE INDEX unique_user_and_tag ON TABLE owns_tag COLUMNS in, out UNIQUE;
     ";
     db.query(sql_definitions).await?;
 
@@ -52,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server = api_service.server("https://api.naroden.org");
     let swagger_ui = server.swagger_ui();
     let route = Route::new()
-        .nest("/", server)
+        .nest("/", server.with(GrantsMiddleware::with_extractor(extract)))
         .nest("/docs", swagger_ui)
         .with(Cors::new())
         .data(db);
@@ -66,4 +82,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     Ok(())
+}
+
+async fn extract(req: &mut Request) -> Result<HashSet<String>> {
+    let authorization_header = req.headers().get("authorization").cloned();
+    match authorization_header {
+        None => {
+            Ok(HashSet::from([UserRole::NONE.to_string()]))
+        }
+        Some(token) => {
+            let jwt: &str = &token.to_str().unwrap()[7..];
+
+            let jwt_hs256_key = DecodingKey::from_secret(
+                SecretConfig::init_from_env()
+                    .unwrap()
+                    .jwt_hs256_key
+                    .as_ref());
+
+            let claims = decode::<JwtClaims>(&jwt, &jwt_hs256_key, &Validation::new(Algorithm::HS256))
+                .unwrap()
+                .claims;
+
+            req.extensions_mut().insert::<JwtClaims>(claims.clone());
+
+            Ok(HashSet::from([claims.role]))
+        }
+    }
 }

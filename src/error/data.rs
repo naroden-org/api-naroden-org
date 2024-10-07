@@ -10,13 +10,18 @@ pub struct ErrorResponse {
 
 pub fn create_error(error: Error) -> ErrorResponse {
     match error {
-        Error::InvalidCredentials => ErrorResponse {
+        Error::GeneralError => ErrorResponse {
             code: String::from("1000"),
+            description: String::from("General error"),
+        },
+        Error::InvalidCredentials => ErrorResponse {
+            code: String::from("1001"),
             description: String::from("Invalid credentials."),
         },
     }
 }
 
 pub enum Error {
+    GeneralError,
     InvalidCredentials,
 }

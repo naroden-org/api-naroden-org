@@ -10,10 +10,10 @@ services:
       - surrealdb
 
   surrealdb:
-    image: surrealdb/surrealdb:v1.4.2
+    image: surrealdb/surrealdb:v2.0.3
     container_name: surrealdb
     restart: unless-stopped
-    command: start --log trace --auth --user ${DB_USERNAME} --pass ${DB_PASSWORD} file:/data/database.db
+    command: start --auth --user ${DB_USERNAME} --pass ${DB_PASSWORD} rocksdb:/data/api-naroden-org.db
     ports:
       - 8000:8000
     volumes:

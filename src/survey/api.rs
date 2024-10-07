@@ -2,7 +2,6 @@ use poem_openapi::OpenApi;
 use poem_openapi::param::Path;
 use poem_openapi::payload::Json;
 use crate::survey::data::{GetSurveyResponse, GetAllSurveysResponse, PostSurveyAnswerRequest};
-use crate::user::data::PostUserRequest;
 
 pub struct Api;
 

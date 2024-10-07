@@ -18,10 +18,12 @@ pub struct Jwt {
     pub token: String,
 }
 
-#[derive(Object, Serialize, Deserialize)]
-pub struct JwtPayload {
+#[derive(Object, Serialize, Deserialize, Clone)]
+pub struct JwtClaims {
     pub sub: String,
+    pub role: String,
     pub exp: i64,
+    pub iat: i64,
 }
 
 #[derive(Object)]
@@ -29,4 +31,11 @@ pub struct JwtPayload {
 pub struct PostJwtRequest {
     pub user_identifier: String,
     pub password: String,
+}
+
+#[derive(strum_macros::Display)]
+pub enum UserRole {
+    ADMIN,
+    USER,
+    NONE,
 }
