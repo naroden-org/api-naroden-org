@@ -1,11 +1,8 @@
-use std::error::Error;
 use poem::error::ResponseError;
 use poem::http::StatusCode;
-use poem::Response;
 use poem_openapi::{ApiResponse, Object};
 use poem_openapi::payload::Json;
 use serde::{Deserialize, Serialize};
-use serde::de::StdError;
 use surrealdb::sql::Thing;
 use crate::error::data::{ErrorResponse};
 
@@ -47,6 +44,12 @@ pub struct DbOwnsTag {
     pub status: i32,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct DbTagStatistics {
+    pub count: i32,
+    pub status: i32,
+}
+
 #[derive(Object, Deserialize)]
 #[oai(rename_all = "camelCase")]
 pub struct PatchTagRequest {
@@ -65,17 +68,17 @@ pub(crate) enum GetTagResponse {
 #[derive(Object, Serialize)]
 #[oai(rename_all = "camelCase")]
 pub struct GetTag {
-    pub statistics: Vec<Statistics>,
+    pub stats: Vec<Statistics>,
     pub status: i32,
     pub name: String,
-    pub text: String,
+    pub description: String,
 }
 
 #[derive(Object, Serialize)]
 pub struct Statistics {
     pub section: String,
-    pub enabled: i32,
-    pub disabled: i32,
+    pub allowed: i32,
+    pub forbidden: i32,
     pub neutral: i32,
 }
 

@@ -9,6 +9,7 @@ pub const CREATE_USER_QUERY: &str = "
         	    last_name: $last_name,
                 password: $password,
                 password_salt: $password_salt,
+                phone_code: $phone_code,
                 created_on: time::now()
             };
 

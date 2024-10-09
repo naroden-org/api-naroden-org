@@ -12,7 +12,7 @@ pub(crate) enum PostJwtResponse {
     NotFound(Json<ErrorResponse>),
 }
 
-#[derive(Object)]
+#[derive(Object, Serialize, Deserialize, Clone)]
 #[oai(rename_all = "camelCase")]
 pub struct Jwt {
     pub token: String,
@@ -26,7 +26,7 @@ pub struct JwtClaims {
     pub iat: i64,
 }
 
-#[derive(Object)]
+#[derive(Object, Serialize, Deserialize, Clone)]
 #[oai(rename_all = "camelCase")]
 pub struct PostJwtRequest {
     pub user_identifier: String,

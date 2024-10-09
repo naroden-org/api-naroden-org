@@ -25,14 +25,14 @@ pub enum ContactType {
     PHONE,
 }
 
-#[derive(Object, Serialize)]
+#[derive(Object, Serialize, Deserialize, Clone)]
 #[oai(rename_all = "camelCase")]
 pub struct PostUserRequest {
     pub first_name: String,
     pub last_name: String,
     pub email: Option<String>,
     pub phone: Option<String>,
-    pub phone_code: Option<String>,
+    pub phone_code: Option<i32>,
     pub password: String,
     pub referral: Option<String>,
 }
@@ -54,4 +54,13 @@ pub struct UserResponse {
     pub email: Option<String>,
     pub phone: Option<String>,
     pub phone_code: Option<i32>
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct DbUser {
+    pub first_name: String,
+    pub last_name: String,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub phone_code: i32,
 }
