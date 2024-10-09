@@ -1,4 +1,4 @@
-FROM rust:1.81-slim-buster as build
+FROM rust:1.81.0-bookworm as build
 
 # create a new empty shell project
 RUN USER=root cargo new --bin api-naroden-org
@@ -20,7 +20,7 @@ RUN rm ./target/release/deps/api_naroden_org*
 RUN cargo build --release
 
 # our final base
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 # copy the build artifact from the build stage
 COPY --from=build /api-naroden-org/target/release/api-naroden-org .
