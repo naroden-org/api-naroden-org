@@ -18,7 +18,8 @@ pub const CREATE_USER_QUERY: &str = "
                     type: 'EMAIL',
                     value: $email
                 };
-                RELATE $user->owns_contact->$email_contact;
+                RELATE $user->owns_contact->$email_contact
+                    SET is_email = true;
             };
 
             IF string::len($phone) > 0 {
@@ -26,7 +27,8 @@ pub const CREATE_USER_QUERY: &str = "
                     type: 'PHONE',
                     value: $phone
                 };
-                RELATE $user->owns_contact->$phone_contact;
+                RELATE $user->owns_contact->$phone_contact
+                    SET is_phone = true;
             };
 
             RETURN $user;

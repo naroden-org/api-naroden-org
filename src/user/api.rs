@@ -1,16 +1,18 @@
+use std::str::FromStr;
 use argon2::{Argon2, PasswordHasher};
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
-use super::data::{PostUserRequest, User, UserResponse};
+use super::data::{DbUser, GetUserResponse, PostUserRequest, User, UserResponse};
 use poem_openapi::OpenApi;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::Surreal;
 use crate::error::data::{create_error, Error};
-use crate::jwt::data::{Jwt, PostJwtResponse};
+use crate::jwt::data::{Jwt, JwtClaims, PostJwtResponse};
 use crate::jwt::data::PostJwtResponse::NotFound;
-use poem::Result;
+use poem::{Request, Result};
 use poem::web::Data;
 use poem_openapi::payload::Json;
+use surrealdb::sql::Thing;
 use crate::jwt::service::issue_jwt;
 use crate::user::query::CREATE_USER_QUERY;
 
@@ -73,15 +75,38 @@ impl Api {
 
     #[protect("USER")]
     #[oai(path = "/v1/users", method = "get")]
-    async fn get(&self) -> Json<UserResponse> {
-        let response = UserResponse {
-            first_name: "example".to_string(),
-            last_name: "example".to_string(),
-            email: None,
-            phone: None,
-            phone_code: None,
-        };
+    async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetUserResponse> {
+        let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
+        let user_id: Thing = Thing::from_str(format!("user:{}", claims.sub.to_owned()).as_str()).unwrap();
 
-        Json(response)
+        let user: Option<DbUser> = db.query(GET_USER_INFO)
+            .bind(("user", user_id))
+            .await.expect("error").take(0).expect("error");
+
+
+        match user {
+            None => Ok(GetUserResponse::NotFound(Json(create_error(Error::GeneralError)))),
+            Some(user) => {
+                let response = UserResponse {
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    email: user.email,
+                    phone: user.phone,
+                    phone_code: user.phone_code,
+                };
+
+                Ok(GetUserResponse::Ok(Json(response)))
+            }
+        }
     }
 }
+
+const GET_USER_INFO: &str = "
+    SELECT
+        ->owns_contact[WHERE is_phone]->contact.value[0][0] as phone,
+        ->owns_contact[WHERE is_email]->contact.value[0][0] as email,
+        first_name,
+        last_name,
+        phone_cone
+    FROM ONLY $user;
+";

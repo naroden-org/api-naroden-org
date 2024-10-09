@@ -1,6 +1,8 @@
-use poem_openapi::Object;
+use poem_openapi::{ApiResponse, Object};
+use poem_openapi::payload::Json;
 use serde::{Deserialize, Serialize};
 use surrealdb::sql::Thing;
+use crate::error::data::ErrorResponse;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct User {
@@ -46,8 +48,17 @@ pub struct GetUserRequest {
     pub referral: Option<String>,
 }
 
+#[derive(ApiResponse)]
+pub(crate) enum GetUserResponse {
+    #[oai(status = 200)]
+    Ok(Json<UserResponse>),
+
+    #[oai(status = 400)]
+    NotFound(Json<ErrorResponse>),
+}
+
 #[derive(Object)]
-#[oai(rename_all = "camelCase")]
+#[oai(rename_all = "camelCase", skip_serializing_if_is_none = true)]
 pub struct UserResponse {
     pub first_name: String,
     pub last_name: String,
@@ -62,5 +73,5 @@ pub struct DbUser {
     pub last_name: String,
     pub email: Option<String>,
     pub phone: Option<String>,
-    pub phone_code: i32,
+    pub phone_code: Option<i32>,
 }
