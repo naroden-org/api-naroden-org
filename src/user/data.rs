@@ -73,5 +73,6 @@ pub struct DbUser {
     pub last_name: String,
     pub email: Option<String>,
     pub phone: Option<String>,
+    // TODO: move phone code to contact.code
     pub phone_code: Option<i32>,
 }
