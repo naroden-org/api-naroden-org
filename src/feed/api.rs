@@ -39,7 +39,7 @@ impl Api {
             data.push(FeedItem {
                 id: dbFeed.id.id.to_string(),
                 title: dbFeed.title.to_owned(),
-                text: dbFeed.text.to_owned(),
+                text: dbFeed.text.chars().take(20).collect(),
                 image: dbFeed.image.to_owned(),
                 buttons: dbFeed.buttons.to_owned(),
             });
