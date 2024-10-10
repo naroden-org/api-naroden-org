@@ -1,6 +1,7 @@
 use std::str::FromStr;
 use poem::{Request, Result};
 use poem::web::Data;
+use poem_grants::protect;
 use poem_openapi::{OpenApi};
 use poem_openapi::payload::Json;
 use surrealdb::engine::remote::ws::Client;
@@ -10,8 +11,10 @@ use crate::jwt::data::JwtClaims;
 
 pub struct Api;
 
+#[poem_grants::open_api]
 #[OpenApi]
 impl Api {
+    #[protect("USER")]
     #[oai(path = "/v1/contacts", method = "get")]
     async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetContactsResponse> {
         let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
@@ -27,6 +30,7 @@ impl Api {
         Ok(GetContactsResponse::Ok(Json(response)))
     }
 
+    #[protect("USER")]
     #[oai(path = "/v1/contacts", method = "post")]
     async fn post(&self, db: Data<&Surreal<Client>>, raw_request: &Request, request: Json<PostContactsRequest>) {
         let claims = raw_request.extensions().get::<JwtClaims>().unwrap();

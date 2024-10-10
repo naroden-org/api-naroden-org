@@ -50,9 +50,9 @@ impl Api {
     #[protect("USER")]
     #[oai(path = "/v1/tags/:id", method = "get")]
     async fn get(&self, db: Data<&Surreal<Client>>, id: Path<String>, raw_request: &Request) -> Result<GetTagResponse> {
-        let tag_query: Option<DbTag> = db.select(("tag", id.0)).await.expect("error");
+        let tag: Option<DbTag> = db.select(("tag", id.0)).await.expect("error");
 
-        match tag_query {
+        match tag {
             None => { Ok(GetTagResponse::GeneralError(Json(create_error(Error::GeneralError)))) }
             Some(tag) => {
                 let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
