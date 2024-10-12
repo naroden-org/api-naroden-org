@@ -1,21 +1,41 @@
-use poem_openapi::Object;
+use poem_openapi::{ApiResponse, Object};
+use poem_openapi::payload::Json;
 use serde::Serialize;
+use crate::error::data::ErrorResponse;
 
-#[derive(Object, Serialize)]
-#[oai(rename_all = "camelCase")]
-pub struct GetAllSurveysResponse {
-    pub surveys: Vec<Survey>,
+#[derive(ApiResponse)]
+pub(crate) enum GetAllSurveysResponse {
+    #[oai(status = 200)]
+    Ok(Json<AllSurveys>),
+
+    #[oai(status = 500)]
+    GeneralError(Json<ErrorResponse>),
 }
 
 #[derive(Object, Serialize)]
-pub struct Survey {
+#[oai(rename_all = "camelCase")]
+pub struct AllSurveys {
+    pub surveys: Vec<SurveyInfo>,
+}
+
+#[derive(Object, Serialize)]
+pub struct SurveyInfo {
     pub name: String,
     pub section: String,
 }
 
+#[derive(ApiResponse)]
+pub(crate) enum GetSurveyResponse {
+    #[oai(status = 200)]
+    Ok(Json<Survey>),
+
+    #[oai(status = 500)]
+    GeneralError(Json<ErrorResponse>),
+}
+
 #[derive(Object, Serialize)]
 #[oai(rename_all = "camelCase")]
-pub struct GetSurveyResponse {
+pub struct Survey {
     pub questions: Vec<Question>,
 }
 

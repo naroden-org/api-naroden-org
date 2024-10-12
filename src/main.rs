@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     db.query(sql_definitions).await?;
 
     let apis = (user::api::Api, jwt::api::Api, feed::api::Api, tag::api::Api, survey::api::Api, contacts::api::Api, partners::api::Api, statistics::api::Api);
-    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.8");
+    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.9");
 
     let server = api_service.server("https://api.naroden.org");
     let swagger_ui = server.swagger_ui();
@@ -75,7 +75,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(Cors::new())
         .data(db);
 
-    println!("Starting api.naroden.org v0.0.8");
+    println!("Starting api.naroden.org v0.0.9");
     println!("service calls: http://localhost:3001");
     println!("documentation: http://localhost:3001/docs");
 

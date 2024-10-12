@@ -1,36 +1,41 @@
+use poem::{Request, Result};
+use poem::web::Data;
 use poem_openapi::OpenApi;
 use poem_openapi::param::Path;
 use poem_openapi::payload::Json;
-use crate::survey::data::{GetSurveyResponse, GetAllSurveysResponse, PostSurveyAnswerRequest};
+use surrealdb::engine::remote::ws::Client;
+use surrealdb::Surreal;
+use crate::survey::data::{GetSurveyResponse, GetAllSurveysResponse, PostSurveyAnswerRequest, Survey, AllSurveys};
 
 pub struct Api;
 
+#[poem_grants::open_api]
 #[OpenApi]
 impl Api {
-
+    #[protect("USER")]
     #[oai(path = "/v1/surveys", method = "get")]
-    async fn get_all(&self) -> Json<GetAllSurveysResponse> {
-        let response = GetAllSurveysResponse {
+    async fn get_all(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetAllSurveysResponse> {
+        let response = AllSurveys {
             surveys: Vec::new(),
         };
 
-        return Json(response);
+        Ok(GetAllSurveysResponse::Ok(Json(response)))
     }
 
+    #[protect("USER")]
     #[oai(path = "/v1/surveys/:id", method = "get")]
-    async fn get(&self, id: Path<String>) -> Json<GetSurveyResponse> {
-        let response = GetSurveyResponse {
+    async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request, id: Path<String>) -> Result<GetSurveyResponse> {
+        let response = Survey {
             questions: Vec::new(),
         };
 
-        return Json(response);
+        Ok(GetSurveyResponse::Ok(Json(response)))
     }
 
+    #[protect("USER")]
     #[oai(path = "/v1/surveys/:id/questions/:question_id", method = "post")]
-    async fn post_survey_answer(&self, id: Path<String>, question_id: Path<String>, request: Json<PostSurveyAnswerRequest>) {
-        let response = GetSurveyResponse {
-            questions: Vec::new(),
-        };
+    async fn post_survey_answer(&self, db: Data<&Surreal<Client>>, raw_request: &Request, id: Path<String>, question_id: Path<String>, request: Json<PostSurveyAnswerRequest>) {
+
     }
 
 }
