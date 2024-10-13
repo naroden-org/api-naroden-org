@@ -93,7 +93,7 @@ GET /v1/partners
 {
   partners: [{
     image_url: url
-    buttons: (from feed)
+    buttons: (from news)
   }]
 }
 

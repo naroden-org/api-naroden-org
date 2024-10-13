@@ -6,9 +6,9 @@ use crate::error::data::ErrorResponse;
 
 
 #[derive(ApiResponse)]
-pub(crate) enum GetAllFeedResponse {
+pub(crate) enum GetAllNewsResponse {
     #[oai(status = 200)]
-    Ok(Json<GetAllFeed>),
+    Ok(Json<GetAllNews>),
 
     #[oai(status = 500)]
     GeneralError(Json<ErrorResponse>),
@@ -16,48 +16,48 @@ pub(crate) enum GetAllFeedResponse {
 
 #[derive(Object, Serialize)]
 #[oai(rename_all = "camelCase")]
-pub struct GetAllFeed {
-    pub feed: Vec<FeedItem>,
+pub struct GetAllNews {
+    pub news: Vec<NewsItem>,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct DbFeed {
+pub struct DbNews {
     pub id: Thing,
     pub title: String,
     pub text: String,
     pub image: String,
-    pub buttons: Vec<FeedButton>,
+    pub buttons: Vec<NewsButton>,
 }
 
 #[derive(Object, Deserialize, Serialize)]
-pub struct FeedItem {
+pub struct NewsItem {
     pub id: String,
     pub title: String,
     pub text: String,
     pub image: String,
-    pub buttons: Vec<FeedButton>,
+    pub buttons: Vec<NewsButton>,
 }
 
 #[derive(Object, Deserialize, Serialize, Clone)]
 #[oai(rename_all = "camelCase")]
-pub struct FeedButton {
+pub struct NewsButton {
     pub r#type: String,
     pub url: String,
 }
 
 #[derive(ApiResponse)]
-pub(crate) enum GetFeedDetailsResponse {
+pub(crate) enum GetNewsDetailsResponse {
     #[oai(status = 200)]
-    Ok(Json<FeedDetails>),
+    Ok(Json<NewsDetails>),
 
     #[oai(status = 500)]
     GeneralError(Json<ErrorResponse>),
 }
 
 #[derive(Object, Deserialize, Serialize)]
-pub struct FeedDetails {
+pub struct NewsDetails {
     pub title: String,
     pub text: String,
     pub image: String,
-    pub buttons: Vec<FeedButton>,
+    pub buttons: Vec<NewsButton>,
 }

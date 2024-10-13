@@ -27,6 +27,10 @@ impl Api {
         let user: User = self.create_new_user(&db, &request).await;
         let jwt: Option<Jwt> = issue_jwt(user.id.unwrap().id.to_string());
 
+        // TODO: send email on registration
+        // TODO: accept terms and conditions
+        // TODO: validate phone code
+
         match jwt {
             Some(jwt) => Ok(PostJwtResponse::Ok(Json(Jwt::from(jwt)))),
             None => Ok(NotFound(Json(create_error(Error::InvalidCredentials)))),
