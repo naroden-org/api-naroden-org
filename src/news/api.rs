@@ -6,7 +6,7 @@ use poem_openapi::param::Path;
 use poem_openapi::payload::Json;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::Surreal;
-use crate::error::data::{create_error, Error};
+use crate::error::data::{create_error, ApiError};
 use crate::jwt::data::JwtClaims;
 use crate::news::data::{DbNews, GetAllNews, GetAllNewsResponse, GetNewsDetailsResponse, NewsDetails, NewsItem};
 
@@ -26,7 +26,7 @@ impl Api {
                     #[oai(default = "get_default_news_count")]
                     count: poem_openapi::param::Query<i32>) -> Result<GetAllNewsResponse> {
         let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
-        // TODO: implement filter by ID and filter by count!!!
+        // TODO: implement filter by ID and filter by count from querry params!!!
         // TODO: set tags to news
         let news: Vec<DbNews> = db.query("SELECT * FROM news")
             // .bind(("user_id", claims.sub.to_owned()))
@@ -57,7 +57,7 @@ impl Api {
         let news: Option<DbNews> = db.select(("news", id.0)).await.expect("error");
 
         match news {
-            None => Ok(GetNewsDetailsResponse::GeneralError(Json(create_error(Error::GeneralError)))),
+            None => Ok(GetNewsDetailsResponse::GeneralError(Json(create_error(ApiError::GeneralError)))),
             Some(news) => {
                 let response = NewsDetails {
                     title: news.title.to_owned(),
@@ -78,7 +78,7 @@ impl Api {
         let news: Option<DbNews> = db.select(("news", id.0)).await.expect("error");
 
         match news {
-            None => Ok(GetNewsDetailsResponse::GeneralError(Json(create_error(Error::GeneralError)))),
+            None => Ok(GetNewsDetailsResponse::GeneralError(Json(create_error(ApiError::GeneralError)))),
             Some(news) => {
                 let response = NewsDetails {
                     title: news.title.to_owned(),

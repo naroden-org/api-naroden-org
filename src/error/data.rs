@@ -8,20 +8,20 @@ pub struct ErrorResponse {
     pub description: String,
 }
 
-pub fn create_error(error: Error) -> ErrorResponse {
+pub fn create_error(error: ApiError) -> ErrorResponse {
     match error {
-        Error::GeneralError => ErrorResponse {
+        ApiError::GeneralError => ErrorResponse {
             code: String::from("1000"),
             description: String::from("General error"),
         },
-        Error::InvalidCredentials => ErrorResponse {
+        ApiError::InvalidCredentials => ErrorResponse {
             code: String::from("1001"),
             description: String::from("Invalid credentials."),
         },
     }
 }
 
-pub enum Error {
+pub enum ApiError {
     GeneralError,
     InvalidCredentials,
 }

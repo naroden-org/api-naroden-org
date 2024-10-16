@@ -1,13 +1,19 @@
 use std::collections::HashSet;
 use envconfig::Envconfig;
 use jsonwebtoken::{Algorithm, decode, DecodingKey, Validation};
-use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server, Request};
+use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server, Request, IntoResponse};
+use poem::http::StatusCode;
+use poem::middleware::{CatchPanic, PanicHandler, Tracing, RequestId};
 use poem_grants::GrantsMiddleware;
-use poem_openapi::OpenApiService;
+use poem_openapi::{OpenApiService};
+use poem_openapi::payload::Json;
 use surrealdb::engine::remote::ws::{Client, Ws, Wss};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
+use crate::error::data::{create_error, ApiError};
 use crate::jwt::data::{JwtClaims, UserRole};
+use poem::Endpoint;
+use tracing_subscriber::filter::LevelFilter;
 
 mod error;
 mod jwt;
@@ -64,18 +70,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ";
     db.query(sql_definitions).await?;
 
+    tracing_subscriber::fmt()
+        .with_max_level(LevelFilter::INFO)
+        .init();
+
+
     let apis = (user::api::Api, jwt::api::Api, news::api::Api, tag::api::Api, survey::api::Api, contacts::api::Api, partners::api::Api, statistics::api::Api);
-    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.10");
+    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.11");
+
+
+    let panic_handler = CatchPanic::new().with_handler(|_| {
+        Json(create_error(ApiError::GeneralError))
+            .with_status(StatusCode::INTERNAL_SERVER_ERROR)
+    });
 
     let server = api_service.server("https://api.naroden.org");
     let swagger_ui = server.swagger_ui();
-    let route = Route::new()
-        .nest("/", server.with(GrantsMiddleware::with_extractor(extract)))
-        .nest("/docs", swagger_ui)
+
+    let server = server
+        .with(GrantsMiddleware::with_extractor(extract))
         .with(Cors::new())
+        .with(Tracing)
+        .with(panic_handler)
+        .with(RequestId::new());
+
+
+    let route = Route::new()
+        .nest("/", server)
+        .nest("/docs", swagger_ui)
         .data(db);
 
-    println!("Starting api.naroden.org v0.0.10");
+    println!("Starting api.naroden.org v0.0.11");
     println!("service calls: http://localhost:3001");
     println!("documentation: http://localhost:3001/docs");
 

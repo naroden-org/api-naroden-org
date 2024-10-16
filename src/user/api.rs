@@ -6,13 +6,14 @@ use super::data::{DbUser, GetUserResponse, PostUserRequest, User, UserResponse};
 use poem_openapi::OpenApi;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::Surreal;
-use crate::error::data::{create_error, Error};
+use crate::error::data::{create_error, ApiError};
 use crate::jwt::data::{Jwt, JwtClaims, PostJwtResponse};
 use crate::jwt::data::PostJwtResponse::NotFound;
 use poem::{Request, Result};
 use poem::web::Data;
 use poem_openapi::payload::Json;
 use surrealdb::sql::Thing;
+use tracing::{event, Level};
 use crate::jwt::service::issue_jwt;
 use crate::user::query::CREATE_USER_QUERY;
 
@@ -33,7 +34,7 @@ impl Api {
 
         match jwt {
             Some(jwt) => Ok(PostJwtResponse::Ok(Json(Jwt::from(jwt)))),
-            None => Ok(NotFound(Json(create_error(Error::InvalidCredentials)))),
+            None => Ok(NotFound(Json(create_error(ApiError::InvalidCredentials)))),
         }
     }
 
@@ -87,9 +88,11 @@ impl Api {
             .bind(("user", user_id))
             .await.expect("error").take(0).expect("error");
 
+        // event!(Level::INFO, "something has happened!");
+
 
         match user {
-            None => Ok(GetUserResponse::NotFound(Json(create_error(Error::GeneralError)))),
+            None => Ok(GetUserResponse::NotFound(Json(create_error(ApiError::GeneralError)))),
             Some(user) => {
                 let response = UserResponse {
                     first_name: user.first_name,

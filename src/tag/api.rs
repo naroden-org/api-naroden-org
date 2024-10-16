@@ -7,7 +7,7 @@ use poem_openapi::payload::Json;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::sql::{Id, Thing};
 use surrealdb::Surreal;
-use crate::error::data::{create_error, Error};
+use crate::error::data::{create_error, ApiError};
 use crate::jwt::data::JwtClaims;
 use crate::tag::data::{DbOwnsTag, DbTag, DbTagStatistics, GetTag, GetTagResponse, GetTags, GetTagsResponse, PatchTagRequest, Statistics, Tag};
 
@@ -23,7 +23,7 @@ impl Api {
 
         match tags {
             Some(tags) => Ok(GetTagsResponse::Ok(Json(self.create_tags_response(tags)))),
-            None => Ok(GetTagsResponse::GeneralError(Json(create_error(Error::GeneralError)))),
+            None => Ok(GetTagsResponse::GeneralError(Json(create_error(ApiError::GeneralError)))),
         }
     }
 
@@ -53,7 +53,7 @@ impl Api {
         let tag: Option<DbTag> = db.select(("tag", id.0)).await.expect("error");
 
         match tag {
-            None => { Ok(GetTagResponse::GeneralError(Json(create_error(Error::GeneralError)))) }
+            None => { Ok(GetTagResponse::GeneralError(Json(create_error(ApiError::GeneralError)))) }
             Some(tag) => {
                 let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
                 let user_id: Thing = Thing::from_str(format!("user:{}", claims.sub.to_owned()).as_str()).unwrap();
