@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
     let apis = (user::api::Api, jwt::api::Api, news::api::Api, tag::api::Api, survey::api::Api, contacts::api::Api, partners::api::Api, statistics::api::Api);
-    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.11");
+    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.12");
 
 
     let panic_handler = CatchPanic::new().with_handler(|_| {
@@ -100,7 +100,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/docs", swagger_ui)
         .data(db);
 
-    println!("Starting api.naroden.org v0.0.11");
+    println!("Starting api.naroden.org v0.0.12");
     println!("service calls: http://localhost:3001");
     println!("documentation: http://localhost:3001/docs");
 
