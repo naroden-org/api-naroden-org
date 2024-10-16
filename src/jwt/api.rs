@@ -1,7 +1,7 @@
 use super::data::{Jwt, PostJwtRequest, PostJwtResponse};
 use super::service::issue;
 use crate::error::data::{create_error, ApiError};
-use crate::jwt::data::PostJwtResponse::NotFound;
+use crate::jwt::data::PostJwtResponse::BadRequest;
 use poem::web::Data;
 use poem::Result;
 use poem_openapi::payload::Json;
@@ -21,7 +21,7 @@ impl Api {
 
         match jwt {
             Some(jwt) => Ok(PostJwtResponse::Ok(Json(Jwt::from(jwt)))),
-            None => Ok(NotFound(Json(create_error(ApiError::InvalidCredentials)))),
+            None => Ok(BadRequest(Json(create_error(ApiError::InvalidCredentials)))),
         }
     }
 }

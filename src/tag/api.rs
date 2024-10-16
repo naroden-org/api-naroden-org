@@ -27,14 +27,13 @@ impl Api {
         }
     }
 
-
     fn create_tags_response(&self, tags: Vec<DbTag>) -> GetTags {
         let mut response_tags = vec![];
         for tag in tags.iter() {
             response_tags.push(self.create_tag_response(tag));
         }
 
-        return GetTags {
+        GetTags {
             tags: response_tags,
         }
     }
@@ -79,11 +78,11 @@ impl Api {
                 };
                 for tag_statistic in tag_statistics {
                     if tag_statistic.status == 0 {
-                        all_users_total.neutral = tag_statistic.count;
-                    } else if tag_statistic.status == 1 {
-                        all_users_total.allowed = tag_statistic.count;
-                    } else if tag_statistic.status == 2 {
                         all_users_total.forbidden = tag_statistic.count;
+                    } else if tag_statistic.status == 1 {
+                        all_users_total.neutral = tag_statistic.count;
+                    } else if tag_statistic.status == 2 {
+                        all_users_total.allowed = tag_statistic.count;
                     }
                 }
 

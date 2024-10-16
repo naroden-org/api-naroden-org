@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::str::FromStr;
 use argon2::{Argon2, PasswordHasher};
 use argon2::password_hash::rand_core::OsRng;
@@ -5,16 +6,18 @@ use argon2::password_hash::SaltString;
 use super::data::{DbUser, GetUserResponse, PostUserRequest, User, UserResponse};
 use poem_openapi::OpenApi;
 use surrealdb::engine::remote::ws::Client;
-use surrealdb::Surreal;
+use surrealdb::{Error, Surreal};
 use crate::error::data::{create_error, ApiError};
 use crate::jwt::data::{Jwt, JwtClaims, PostJwtResponse};
-use crate::jwt::data::PostJwtResponse::NotFound;
+use crate::jwt::data::PostJwtResponse::BadRequest;
 use poem::{Request, Result};
 use poem::web::Data;
 use poem_openapi::payload::Json;
+use surrealdb::err::Error::IndexExists;
 use surrealdb::sql::Thing;
 use tracing::{event, Level};
 use crate::jwt::service::issue_jwt;
+use crate::user;
 use crate::user::query::CREATE_USER_QUERY;
 
 pub struct Api;
@@ -25,8 +28,73 @@ impl Api {
     #[protect("NONE")]
     #[oai(path = "/v1/users", method = "post")]
     async fn create_user(&self, db: Data<&Surreal<Client>>, request: Json<PostUserRequest>) -> Result<PostJwtResponse> {
-        let user: User = self.create_new_user(&db, &request).await;
-        let jwt: Option<Jwt> = issue_jwt(user.id.unwrap().id.to_string());
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password_hash = argon2
+            .hash_password(request.password.as_ref(), &salt)
+            .ok()
+            .expect("error")
+            .to_string();
+
+        let email: String = match &request.email {
+            None => { "".to_string() }
+            Some(email) => { email.to_string() }
+        };
+
+        let phone: String = match &request.phone {
+            None => { "".to_string() }
+            Some(phone) => { phone.to_string() }
+        };
+
+        let phone_code: i32 = match &request.phone_code {
+            None => { 0 }
+            Some(phone_code) => { phone_code.to_owned() }
+        };
+
+        let create_user_response = db
+            .query(CREATE_USER_QUERY)
+            .bind(("first_name", request.first_name.to_owned()))
+            .bind(("last_name", request.last_name.to_owned()))
+            .bind(("password", password_hash))
+            .bind(("password_salt", salt.to_string()))
+            .bind(("email", email.to_string()))
+            .bind(("phone", phone.to_string()))
+            .bind(("phone_code", phone_code))
+            .await;
+
+        let mut create_user_response = match create_user_response {
+            Ok(response) => {
+                response
+            }
+            Err(error) => {
+                return Ok(BadRequest(Json(create_error(ApiError::GeneralError))))
+            }
+        };
+
+        let data:HashMap<usize, Error> = create_user_response.take_errors();
+        if !data.is_empty() {
+            match serde_json::to_string(&data) {
+                Ok(error) => {
+                    if(error.contains("Database index `unique_contact_value` already contains"))
+                    {
+                        if (email.len() > 0  && error.contains(&email)) {
+                            return Ok(BadRequest(Json(create_error(ApiError::AlreadyUsedEmail))))
+                        }
+                        if (phone.len() > 0 && error.contains(&phone)) {
+                            return Ok(BadRequest(Json(create_error(ApiError::AlreadyUsedPhone))))
+                        }
+                    }
+                }
+                Err(e) => {
+                    event!(Level::ERROR, e);
+                    return Ok(BadRequest(Json(create_error(ApiError::GeneralError))))
+                }
+            }
+        }
+
+        let user: Option<User> = create_user_response.take(0).expect("reason");
+
+        let jwt: Option<Jwt> = issue_jwt(user.unwrap().id.unwrap().id.to_string());
 
         // TODO: send email on registration
         // TODO: accept terms and conditions
@@ -34,49 +102,9 @@ impl Api {
 
         match jwt {
             Some(jwt) => Ok(PostJwtResponse::Ok(Json(Jwt::from(jwt)))),
-            None => Ok(NotFound(Json(create_error(ApiError::InvalidCredentials)))),
+            None => Ok(BadRequest(Json(create_error(ApiError::InvalidCredentials)))),
         }
     }
-
-    async fn create_new_user(&self, db: &Data<&Surreal<Client>>, user: &Json<PostUserRequest>) -> User {
-        let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
-        let password_hash = argon2
-            .hash_password(user.password.as_ref(), &salt)
-            .ok()
-            .expect("error")
-            .to_string();
-
-        let email: String = match &user.email {
-            None => { "".to_string() }
-            Some(email) => { email.to_string() }
-        };
-
-        let phone: String = match &user.phone {
-            None => { "".to_string() }
-            Some(phone) => { phone.to_string() }
-        };
-
-        let phone_code: i32 = match &user.phone_code {
-            None => { 0 }
-            Some(phone_code) => { phone_code.to_owned() }
-        };
-
-        let query = db
-            .query(CREATE_USER_QUERY)
-            .bind(("first_name", user.first_name.to_owned()))
-            .bind(("last_name", user.last_name.to_owned()))
-            .bind(("password", password_hash))
-            .bind(("password_salt", salt.to_string()))
-            .bind(("email", email))
-            .bind(("phone", phone))
-            .bind(("phone_code", phone_code));
-
-        let created: Option<User> = query.await.expect("error").take(0).expect("no users returned from db");
-
-        created.expect("failed to create a user")
-    }
-
 
     #[protect("USER")]
     #[oai(path = "/v1/users", method = "get")]
@@ -87,9 +115,6 @@ impl Api {
         let user: Option<DbUser> = db.query(GET_USER_INFO)
             .bind(("user", user_id))
             .await.expect("error").take(0).expect("error");
-
-        // event!(Level::INFO, "something has happened!");
-
 
         match user {
             None => Ok(GetUserResponse::NotFound(Json(create_error(ApiError::GeneralError)))),

@@ -9,7 +9,7 @@ pub(crate) enum PostJwtResponse {
     Ok(Json<Jwt>),
 
     #[oai(status = 400)]
-    NotFound(Json<ErrorResponse>),
+    BadRequest(Json<ErrorResponse>),
 }
 
 #[derive(Object, Serialize, Deserialize, Clone)]
