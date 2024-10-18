@@ -26,3 +26,10 @@ pub struct Statistic {
     pub description: String,
     pub value: String,
 }
+
+#[derive(Object, Deserialize, Serialize)]
+#[oai(rename_all = "camelCase")]
+pub struct DbStatistic {
+    pub description: String,
+    pub value: i32,
+}

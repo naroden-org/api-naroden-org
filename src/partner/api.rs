@@ -18,9 +18,13 @@ impl Api {
     async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetPartnersResponse> {
         let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
 
-        //let contacts: Vec<Contact> = db.query(MATCH_CONTACTS)
-        //    .bind(("user_id", claims.sub.to_owned()))
-        //    .await.expect("error").take(0).expect("error");
+        //GET /v1/partners
+       // {
+        //    partners: [{
+       //         image_url: url
+       //         buttons: (from news)
+      //      }]
+        //}
 
         let response = GetPartners {
             partners: vec![],
