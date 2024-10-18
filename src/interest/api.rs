@@ -72,17 +72,17 @@ impl Api {
                     .await.expect("error").take(0).expect("error");
                 let mut all_users_total: Statistics = Statistics {
                     section: "Всички потребители".to_string(),
-                    allowed: 0,
+                    favourite: 0,
                     forbidden: 0,
-                    neutral: 0,
+                    allowed: 0,
                 };
                 for interest_statistic in interest_statistics {
                     if interest_statistic.status == 0 {
                         all_users_total.forbidden = interest_statistic.count;
                     } else if interest_statistic.status == 1 {
-                        all_users_total.neutral = interest_statistic.count;
-                    } else if interest_statistic.status == 2 {
                         all_users_total.allowed = interest_statistic.count;
+                    } else if interest_statistic.status == 2 {
+                        all_users_total.favourite = interest_statistic.count;
                     }
                 }
 

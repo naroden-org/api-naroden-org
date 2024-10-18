@@ -77,9 +77,9 @@ pub struct GetInterest {
 #[derive(Object, Serialize)]
 pub struct Statistics {
     pub section: String,
-    pub allowed: i32,
+    pub favourite: i32,
     pub forbidden: i32,
-    pub neutral: i32,
+    pub allowed: i32,
 }
 
 struct DbError(surrealdb::Error);
