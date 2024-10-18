@@ -32,14 +32,13 @@ pub struct Interest {
 pub struct DbInterest {
     pub id: Thing,
     pub name: String,
-    pub section: String,
-    pub text: String,
+    pub description: String,
     pub default_status: i32,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct DbOwnsInterest {
-    pub r#in: Thing,
+pub struct DbHasInterest {
+    // pub r#in: Thing,
     pub out: Thing,
     pub status: i32,
 }

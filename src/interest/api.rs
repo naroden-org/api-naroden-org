@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::str::FromStr;
 use poem::{Request, Result};
 use poem::web::Data;
@@ -8,7 +9,7 @@ use surrealdb::engine::remote::ws::Client;
 use surrealdb::sql::{Id, Thing};
 use surrealdb::Surreal;
 use crate::error::data::{create_error, ApiError};
-use crate::interest::data::{DbInterest, DbInterestStatistics, DbOwnsInterest, GetInterest, GetInterestResponse, GetInterests, GetInterestsResponse, Interest, PatchInterestRequest, Statistics};
+use crate::interest::data::{DbInterest, DbInterestStatistics, DbHasInterest, GetInterest, GetInterestResponse, GetInterests, GetInterestsResponse, Interest, PatchInterestRequest, Statistics};
 use crate::jwt::data::JwtClaims;
 
 pub struct Api;
@@ -18,31 +19,58 @@ pub struct Api;
 impl Api {
     #[protect("USER")]
     #[oai(path = "/private/v1/interests", method = "get")]
-    async fn get_all(&self, db: Data<&Surreal<Client>>) -> Result<GetInterestsResponse> {
+    async fn get_all(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetInterestsResponse> {
         let interests: Option<Vec<DbInterest>> = db.select("interest").await.ok().take();
 
+        let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
+        let user_id: Thing = Thing::from_str(format!("user:{}", claims.sub.to_owned()).as_str()).unwrap();
+        let db_has_interest: Vec<DbHasInterest> = db.query(GET_ALL_INTEREST_STATUSES)
+            .bind(("user_id", user_id))
+            .await.expect("error").take(0).expect("error");
+        let sections = db_has_interest
+                    .into_iter()
+                    .map(|x| (x.out.clone(), self.status_to_section(x.status)))
+                    .collect::<BTreeMap<Thing, String>>();
+
+
+
         match interests {
-            Some(dbInterests) => Ok(GetInterestsResponse::Ok(Json(self.create_interests_response(dbInterests)))),
+            Some(dbInterests) => Ok(GetInterestsResponse::Ok(Json(self.create_interests_response(dbInterests, sections)))),
             None => Ok(GetInterestsResponse::GeneralError(Json(create_error(ApiError::GeneralError)))),
         }
     }
 
-    fn create_interests_response(&self, interests: Vec<DbInterest>) -> GetInterests {
+    fn status_to_section(&self, status: i32) -> String {
+        if status == 0 {
+            "Забранени".to_string()
+        } else if status == 1 {
+            "Позволени".to_string()
+        } else if status == 2 {
+            "Любими".to_string()
+        } else {
+            "Други".to_string()
+        }
+
+    }
+
+    fn create_interests_response(&self, interests: Vec<DbInterest>, sections: BTreeMap<Thing, String>) -> GetInterests {
         let mut response_interests = vec![];
         for interest in interests.iter() {
-            response_interests.push(self.create_interest_response(interest));
+            let section: String = if sections.contains_key(&interest.id) {
+                sections.get(&interest.id).unwrap().to_string()
+            } else {
+                self.status_to_section(interest.default_status)
+            };
+
+            response_interests.push(Interest {
+                id: interest.id.id.to_string(),
+                name: interest.name.to_owned(),
+                section: section,
+            });
         }
 
         GetInterests {
             interests: response_interests,
-        }
-    }
-
-    fn create_interest_response(&self, from: &DbInterest) -> Interest {
-        Interest {
-            id: from.id.id.to_string(),
-            name: from.name.to_owned(),
-            section: from.section.to_owned(),
         }
     }
 
@@ -57,7 +85,7 @@ impl Api {
                 let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
                 let user_id: Thing = Thing::from_str(format!("user:{}", claims.sub.to_owned()).as_str()).unwrap();
 
-                let relation: Option<DbOwnsInterest> = db.query(GET_INTEREST_STATUS_QUERY)
+                let relation: Option<DbHasInterest> = db.query(GET_INTEREST_STATUS_QUERY)
                     .bind(("user", user_id))
                     .bind(("interest", dbInterest.id.clone()))
                     .await.expect("error").take(0).expect("error");
@@ -90,7 +118,7 @@ impl Api {
                     stats: vec![all_users_total],
                     status: interest_status,
                     name: dbInterest.name,
-                    description: dbInterest.text,
+                    description: dbInterest.description,
                 };
 
                 return Ok(GetInterestResponse::Ok(Json(response)))
@@ -121,19 +149,21 @@ impl Api {
 
 
 const CREATE_OR_UPDATE_INTEREST_STATUS_QUERY: &str = "
-        LET $relation = SELECT * FROM owns_interest WHERE in=$user and out=$interest LIMIT 1;
+        LET $relation = SELECT * FROM has_interest WHERE in=$user and out=$interest LIMIT 1;
         IF $relation {
             UPDATE $relation SET status=$status;
         } ELSE {
-            RELATE $user->owns_interest->$interest SET status=$status;
+            RELATE $user->has_interest->$interest SET status=$status;
         };
     ";
 
-const GET_INTEREST_STATUS_QUERY: &str = "SELECT * FROM owns_interest WHERE in=$user and out=$interest LIMIT 1;";
+const GET_INTEREST_STATUS_QUERY: &str = "SELECT * FROM has_interest WHERE in=$user and out=$interest LIMIT 1;";
 
 const GET_INTEREST_STATISTICS_QUERY: &str = "
         SELECT status, count()
-        FROM owns_interest
+        FROM has_interest
         WHERE out = $interest
         GROUP BY status
 ";
+
+const GET_ALL_INTEREST_STATUSES: &str = "SELECT status, out FROM has_interest where in=$user_id;";
