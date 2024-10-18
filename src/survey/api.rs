@@ -13,7 +13,7 @@ pub struct Api;
 #[OpenApi]
 impl Api {
     #[protect("USER")]
-    #[oai(path = "/v1/surveys", method = "get")]
+    #[oai(path = "/private/v1/surveys", method = "get")]
     async fn get_all(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetAllSurveysResponse> {
         let response = AllSurveys {
             surveys: Vec::new(),
@@ -23,7 +23,7 @@ impl Api {
     }
 
     #[protect("USER")]
-    #[oai(path = "/v1/surveys/:id", method = "get")]
+    #[oai(path = "/private/v1/surveys/:id", method = "get")]
     async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request, id: Path<String>) -> Result<GetSurveyResponse> {
         let response = Survey {
             questions: Vec::new(),
@@ -33,7 +33,7 @@ impl Api {
     }
 
     #[protect("USER")]
-    #[oai(path = "/v1/surveys/:id/questions/:question_id", method = "post")]
+    #[oai(path = "/private/v1/surveys/:id/questions/:question_id", method = "post")]
     async fn post_survey_answer(&self, db: Data<&Surreal<Client>>, raw_request: &Request, id: Path<String>, question_id: Path<String>, request: Json<PostSurveyAnswerRequest>) {
 
     }

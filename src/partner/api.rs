@@ -14,7 +14,7 @@ pub struct Api;
 #[OpenApi]
 impl Api {
     #[protect("USER")]
-    #[oai(path = "/v1/partners", method = "get")]
+    #[oai(path = "/private/v1/partners", method = "get")]
     async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetPartnersResponse> {
         let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
 

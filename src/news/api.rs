@@ -18,7 +18,7 @@ pub fn get_default_news_count() -> i32 { 20 }
 #[OpenApi]
 impl Api {
     #[protect("USER")]
-    #[oai(path = "/v1/news", method = "get")]
+    #[oai(path = "/private/v1/news", method = "get")]
     async fn getAll(&self,
                     db: Data<&Surreal<Client>>,
                     raw_request: &Request,
@@ -27,7 +27,7 @@ impl Api {
                     count: poem_openapi::param::Query<i32>) -> Result<GetAllNewsResponse> {
         let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
         // TODO: implement filter by ID and filter by count from querry params!!!
-        // TODO: set tags to news
+        // TODO: set interests to news
         let news: Vec<DbNews> = db.query("SELECT * FROM news")
             // .bind(("user_id", claims.sub.to_owned()))
             .await.expect("error").take(0).expect("error");
@@ -51,7 +51,7 @@ impl Api {
     }
 
     #[protect("USER")]
-    #[oai(path = "/v1/news/:id", method = "get")]
+    #[oai(path = "/private/v1/news/:id", method = "get")]
     async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request, id: Path<String>) -> Result<GetNewsDetailsResponse>
     {
         let news: Option<DbNews> = db.select(("news", id.0)).await.expect("error");
@@ -72,7 +72,7 @@ impl Api {
     }
 
     #[protect("USER")]
-    #[oai(path = "/v1/news/:id", method = "put")]
+    #[oai(path = "/admin/v1/news/:id", method = "put")]
     async fn update(&self, db: Data<&Surreal<Client>>, raw_request: &Request, id: Path<String>) -> Result<GetNewsDetailsResponse>
     {
         let news: Option<DbNews> = db.select(("news", id.0)).await.expect("error");

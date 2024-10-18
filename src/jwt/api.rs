@@ -15,7 +15,7 @@ pub struct Api;
 #[OpenApi]
 impl Api {
     #[protect("NONE")]
-    #[oai(path = "/v1/jwt", method = "post")]
+    #[oai(path = "/public/v1/jwt", method = "post")]
     async fn create(&self, db: Data<&Surreal<Client>>, request: Json<PostJwtRequest>) -> Result<PostJwtResponse> {
         let jwt: Option<Jwt> = issue(db, request.clone()).await;
 

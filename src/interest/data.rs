@@ -18,7 +18,7 @@ pub(crate) enum GetInterestsResponse {
 #[derive(Object, Serialize)]
 #[oai(rename_all = "camelCase")]
 pub struct GetInterests {
-    pub tags: Vec<Interest>,
+    pub interests: Vec<Interest>,
 }
 
 #[derive(Object, Serialize)]

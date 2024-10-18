@@ -26,7 +26,7 @@ pub struct Api;
 #[OpenApi]
 impl Api {
     #[protect("NONE")]
-    #[oai(path = "/v1/users", method = "post")]
+    #[oai(path = "/public/v1/users", method = "post")]
     async fn create_user(&self, db: Data<&Surreal<Client>>, request: Json<PostUserRequest>) -> Result<PostJwtResponse> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
@@ -107,7 +107,7 @@ impl Api {
     }
 
     #[protect("USER")]
-    #[oai(path = "/v1/users", method = "get")]
+    #[oai(path = "/private/v1/profile", method = "get")]
     async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetUserResponse> {
         let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
         let user_id: Thing = Thing::from_str(format!("user:{}", claims.sub.to_owned()).as_str()).unwrap();
