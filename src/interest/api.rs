@@ -8,8 +8,8 @@ use surrealdb::engine::remote::ws::Client;
 use surrealdb::sql::{Id, Thing};
 use surrealdb::Surreal;
 use crate::error::data::{create_error, ApiError};
+use crate::interest::data::{DbInterest, DbInterestStatistics, DbOwnsInterest, GetInterest, GetInterestResponse, GetInterests, GetInterestsResponse, Interest, PatchInterestRequest, Statistics};
 use crate::jwt::data::JwtClaims;
-use crate::tag::data::{DbOwnsTag, DbTag, DbTagStatistics, GetTag, GetTagResponse, GetTags, GetTagsResponse, PatchTagRequest, Statistics, Tag};
 
 pub struct Api;
 
@@ -17,29 +17,29 @@ pub struct Api;
 #[OpenApi]
 impl Api {
     #[protect("USER")]
-    #[oai(path = "/v1/tags", method = "get")]
-    async fn get_all(&self, db: Data<&Surreal<Client>>) -> Result<GetTagsResponse> {
-        let tags: Option<Vec<DbTag>> = db.select("tag").await.ok().take();
+    #[oai(path = "/v1/interests", method = "get")]
+    async fn get_all(&self, db: Data<&Surreal<Client>>) -> Result<GetInterestsResponse> {
+        let tags: Option<Vec<DbInterest>> = db.select("interest").await.ok().take();
 
         match tags {
-            Some(tags) => Ok(GetTagsResponse::Ok(Json(self.create_tags_response(tags)))),
-            None => Ok(GetTagsResponse::GeneralError(Json(create_error(ApiError::GeneralError)))),
+            Some(tags) => Ok(GetInterestsResponse::Ok(Json(self.create_tags_response(tags)))),
+            None => Ok(GetInterestsResponse::GeneralError(Json(create_error(ApiError::GeneralError)))),
         }
     }
 
-    fn create_tags_response(&self, tags: Vec<DbTag>) -> GetTags {
+    fn create_tags_response(&self, tags: Vec<DbInterest>) -> GetInterests {
         let mut response_tags = vec![];
         for tag in tags.iter() {
             response_tags.push(self.create_tag_response(tag));
         }
 
-        GetTags {
+        GetInterests {
             tags: response_tags,
         }
     }
 
-    fn create_tag_response(&self, from: &DbTag) -> Tag {
-        Tag {
+    fn create_tag_response(&self, from: &DbInterest) -> Interest {
+        Interest {
             id: from.id.id.to_string(),
             name: from.name.to_owned(),
             section: from.section.to_owned(),
@@ -47,17 +47,17 @@ impl Api {
     }
 
     #[protect("USER")]
-    #[oai(path = "/v1/tags/:id", method = "get")]
-    async fn get(&self, db: Data<&Surreal<Client>>, id: Path<String>, raw_request: &Request) -> Result<GetTagResponse> {
-        let tag: Option<DbTag> = db.select(("tag", id.0)).await.expect("error");
+    #[oai(path = "/v1/interests/:id", method = "get")]
+    async fn get(&self, db: Data<&Surreal<Client>>, id: Path<String>, raw_request: &Request) -> Result<GetInterestResponse> {
+        let tag: Option<DbInterest> = db.select(("tag", id.0)).await.expect("error");
 
         match tag {
-            None => { Ok(GetTagResponse::GeneralError(Json(create_error(ApiError::GeneralError)))) }
+            None => { Ok(GetInterestResponse::GeneralError(Json(create_error(ApiError::GeneralError)))) }
             Some(tag) => {
                 let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
                 let user_id: Thing = Thing::from_str(format!("user:{}", claims.sub.to_owned()).as_str()).unwrap();
 
-                let relation: Option<DbOwnsTag> = db.query(GET_TAG_STATUS_QUERY)
+                let relation: Option<DbOwnsInterest> = db.query(GET_TAG_STATUS_QUERY)
                     .bind(("user", user_id))
                     .bind(("tag", tag.id.clone()))
                     .await.expect("error").take(0).expect("error");
@@ -67,7 +67,7 @@ impl Api {
                     relation.unwrap().status
                 };
 
-                let tag_statistics: Vec<DbTagStatistics> = db.query(GET_TAG_STATISTICS_QUERY)
+                let tag_statistics: Vec<DbInterestStatistics> = db.query(GET_TAG_STATISTICS_QUERY)
                     .bind(("tag", tag.id))
                     .await.expect("error").take(0).expect("error");
                 let mut all_users_total: Statistics = Statistics {
@@ -86,22 +86,22 @@ impl Api {
                     }
                 }
 
-                let response: GetTag = GetTag {
+                let response: GetInterest = GetInterest {
                     stats: vec![all_users_total],
                     status: tag_status,
                     name: tag.name,
                     description: tag.text,
                 };
 
-                return Ok(GetTagResponse::Ok(Json(response)))
+                return Ok(GetInterestResponse::Ok(Json(response)))
             }
         }
     }
 
 
     #[protect("USER")]
-    #[oai(path = "/v1/tags/:id", method = "patch")]
-    async fn patch(&self, db: Data<&Surreal<Client>>, id: Path<String>, raw_request: &Request, body: Json<PatchTagRequest>) {
+    #[oai(path = "/v1/interests/:id", method = "patch")]
+    async fn patch(&self, db: Data<&Surreal<Client>>, id: Path<String>, raw_request: &Request, body: Json<PatchInterestRequest>) {
         let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
 
         let user_id: Thing = Thing::from_str(format!("user:{}", claims.sub.to_owned()).as_str()).unwrap();

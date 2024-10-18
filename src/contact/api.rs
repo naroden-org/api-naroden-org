@@ -1,12 +1,11 @@
 use std::str::FromStr;
 use poem::{Request, Result};
 use poem::web::Data;
-use poem_grants::protect;
 use poem_openapi::{OpenApi};
 use poem_openapi::payload::Json;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::Surreal;
-use crate::contacts::data::{Contact, DbContactPhone, GetContacts, GetContactsResponse, PostContactsRequest};
+use crate::contact::data::{Contact, DbContactPhone, GetContacts, GetContactsResponse, PostContactsRequest};
 use crate::jwt::data::JwtClaims;
 
 pub struct Api;

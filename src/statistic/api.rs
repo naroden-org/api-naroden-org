@@ -6,7 +6,7 @@ use poem_openapi::payload::Json;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::Surreal;
 use crate::jwt::data::JwtClaims;
-use crate::partners::data::{GetPartners, GetPartnersResponse};
+use crate::statistic::data::{GetStatistics, GetStatisticsResponse};
 
 pub struct Api;
 
@@ -14,19 +14,20 @@ pub struct Api;
 #[OpenApi]
 impl Api {
     #[protect("USER")]
-    #[oai(path = "/v1/partners", method = "get")]
-    async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetPartnersResponse> {
+    #[oai(path = "/v1/statistics/coverage", method = "get")]
+    async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetStatisticsResponse> {
         let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
 
         //let contacts: Vec<Contact> = db.query(MATCH_CONTACTS)
         //    .bind(("user_id", claims.sub.to_owned()))
         //    .await.expect("error").take(0).expect("error");
 
-        let response = GetPartners {
-            partners: vec![],
+        let response = GetStatistics {
+            stats: vec![],
+            new_users: vec![],
         };
 
-        Ok(GetPartnersResponse::Ok(Json(response)))
+        Ok(GetStatisticsResponse::Ok(Json(response)))
     }
 }
 

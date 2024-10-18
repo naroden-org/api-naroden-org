@@ -7,9 +7,9 @@ use surrealdb::sql::Thing;
 use crate::error::data::{ErrorResponse};
 
 #[derive(ApiResponse)]
-pub(crate) enum GetTagsResponse {
+pub(crate) enum GetInterestsResponse {
     #[oai(status = 200)]
-    Ok(Json<GetTags>),
+    Ok(Json<GetInterests>),
 
     #[oai(status = 500)]
     GeneralError(Json<ErrorResponse>),
@@ -17,19 +17,19 @@ pub(crate) enum GetTagsResponse {
 
 #[derive(Object, Serialize)]
 #[oai(rename_all = "camelCase")]
-pub struct GetTags {
-    pub tags: Vec<Tag>,
+pub struct GetInterests {
+    pub tags: Vec<Interest>,
 }
 
 #[derive(Object, Serialize)]
-pub struct Tag {
+pub struct Interest {
     pub id: String,
     pub name: String,
     pub section: String,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct DbTag {
+pub struct DbInterest {
     pub id: Thing,
     pub name: String,
     pub section: String,
@@ -38,28 +38,28 @@ pub struct DbTag {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct DbOwnsTag {
+pub struct DbOwnsInterest {
     pub r#in: Thing,
     pub out: Thing,
     pub status: i32,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct DbTagStatistics {
+pub struct DbInterestStatistics {
     pub count: i32,
     pub status: i32,
 }
 
 #[derive(Object, Deserialize)]
 #[oai(rename_all = "camelCase")]
-pub struct PatchTagRequest {
+pub struct PatchInterestRequest {
     pub status: i32,
 }
 
 #[derive(ApiResponse)]
-pub(crate) enum GetTagResponse {
+pub(crate) enum GetInterestResponse {
     #[oai(status = 200)]
-    Ok(Json<GetTag>),
+    Ok(Json<GetInterest>),
 
     #[oai(status = 500)]
     GeneralError(Json<ErrorResponse>),
@@ -67,7 +67,7 @@ pub(crate) enum GetTagResponse {
 
 #[derive(Object, Serialize)]
 #[oai(rename_all = "camelCase")]
-pub struct GetTag {
+pub struct GetInterest {
     pub stats: Vec<Statistics>,
     pub status: i32,
     pub name: String,

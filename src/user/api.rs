@@ -86,7 +86,7 @@ impl Api {
                     }
                 }
                 Err(e) => {
-                    event!(Level::ERROR, e);
+                    // event!(Level::ERROR, e);
                     return Ok(BadRequest(Json(create_error(ApiError::GeneralError))))
                 }
             }

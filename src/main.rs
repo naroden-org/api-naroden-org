@@ -18,11 +18,11 @@ use tracing_subscriber::filter::LevelFilter;
 mod error;
 mod jwt;
 mod user;
-mod tag;
+mod interest;
 mod survey;
-mod contacts;
-mod statistics;
-mod partners;
+mod contact;
+mod statistic;
+mod partner;
 mod news;
 
 #[derive(Envconfig)]
@@ -75,8 +75,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
 
-    let apis = (user::api::Api, jwt::api::Api, news::api::Api, tag::api::Api, survey::api::Api, contacts::api::Api, partners::api::Api, statistics::api::Api);
-    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.12");
+    let apis = (user::api::Api, jwt::api::Api, news::api::Api, interest::api::Api, survey::api::Api, contact::api::Api, partner::api::Api, statistic::api::Api);
+    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.13");
 
 
     let panic_handler = CatchPanic::new().with_handler(|_| {
@@ -100,7 +100,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/docs", swagger_ui)
         .data(db);
 
-    println!("Starting api.naroden.org v0.0.12");
+    println!("Starting api.naroden.org v0.0.13");
     println!("service calls: http://localhost:3001");
     println!("documentation: http://localhost:3001/docs");
 
