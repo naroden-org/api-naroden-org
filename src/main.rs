@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
     let apis = (user::api::Api, jwt::api::Api, news::api::Api, interest::api::Api, survey::api::Api, contact::api::Api, partner::api::Api, statistic::api::Api);
-    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.17");
+    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.18");
 
 
     let panic_handler = CatchPanic::new().with_handler(|_| {
@@ -100,7 +100,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/docs", swagger_ui)
         .data(db);
 
-    println!("Starting api.naroden.org v0.0.17");
+    println!("Starting api.naroden.org v0.0.18");
     println!("service calls: http://localhost:3001");
     println!("documentation: http://localhost:3001/docs");
 
@@ -126,19 +126,11 @@ async fn extract(req: &mut Request) -> Result<HashSet<String>> {
                     .jwt_hs256_key
                     .as_ref());
 
-           // let claims = decode::<JwtClaims>(&jwt, &jwt_hs256_key, &Validation::new(Algorithm::HS256))
-         //       .unwrap()
-          //      .claims;
+            let claims = decode::<JwtClaims>(&jwt, &jwt_hs256_key, &Validation::new(Algorithm::HS256))
+                .unwrap()
+                .claims;
 
-
-            req.extensions_mut().insert::<JwtClaims>(JwtClaims {
-                sub: "61foy29l2qlzei7l99v8".to_string(),
-                role: "USER".to_string(),
-                exp: 0,
-                iat: 0,
-            });
-
-            Ok(HashSet::from(["USER".to_string()]))
+            Ok(HashSet::from([claims.role]))
         }
     }
 }
