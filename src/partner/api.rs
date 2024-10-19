@@ -38,7 +38,7 @@ pub const MATCH_CONTACTS: &str = "
     select
         nickname,
         phone,
-        (IF phone in array::intersect((select phone from contact_phones).phone, (select (value) as value from contact).value) THEN 'Регистрирани' ELSE 'Не регистрирани' END) as section
-    from contact_phones
+        (IF phone in array::intersect((select phone from contact_phone).phone, (select (value) as value from contact).value) THEN 'Регистрирани' ELSE 'Не регистрирани' END) as section
+    from contact_phone
     where user_id = $user_id;
     ";

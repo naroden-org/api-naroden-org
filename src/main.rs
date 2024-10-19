@@ -67,6 +67,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         DEFINE FIELD in ON TABLE has_interest TYPE record<user>;
         DEFINE FIELD out ON TABLE has_interest TYPE record<interest>;
         DEFINE INDEX unique_user_and_interest ON TABLE has_interest COLUMNS in, out UNIQUE;
+
+        DEFINE INDEX unique_contact_phone_per_user ON TABLE contact_phone COLUMNS phone, user_id UNIQUE;
+        DEFINE INDEX index_contact_phone_user ON TABLE contact_phone COLUMNS user_id;
+        DEFINE INDEX index_contact_phone_phone ON TABLE contact_phone COLUMNS phone;
     ";
     db.query(sql_definitions).await?;
 
@@ -76,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
     let apis = (user::api::Api, jwt::api::Api, news::api::Api, interest::api::Api, survey::api::Api, contact::api::Api, partner::api::Api, statistic::api::Api);
-    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.19");
+    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.20");
 
 
     let panic_handler = CatchPanic::new().with_handler(|_| {
@@ -100,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/docs", swagger_ui)
         .data(db);
 
-    println!("Starting api.naroden.org v0.0.19");
+    println!("Starting api.naroden.org v0.0.20");
     println!("service calls: http://localhost:3001");
     println!("documentation: http://localhost:3001/docs");
 
