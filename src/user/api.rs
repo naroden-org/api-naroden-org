@@ -109,7 +109,7 @@ impl Api {
     #[protect("USER")]
     #[oai(path = "/private/v1/profile", method = "get")]
     async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetUserResponse> {
-        let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
+        let claims: &JwtClaims = raw_request.extensions().get::<JwtClaims>().unwrap();
         let user_id: Thing = Thing::from_str(format!("user:{}", claims.sub.to_owned()).as_str()).unwrap();
 
         let user: Option<DbUser> = db.query(GET_USER_INFO)
