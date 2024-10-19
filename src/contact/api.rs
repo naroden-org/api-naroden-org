@@ -19,7 +19,7 @@ impl Api {
         let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
 
         let contacts: Vec<Contact> = db.query(MATCH_CONTACTS)
-            .bind(("user_id", claims.sub.to_owned()))
+            .bind(("$user_id_value", claims.sub.to_owned()))
             .await.expect("error").take(0).expect("error");
 
         let response = GetContacts {
@@ -55,10 +55,17 @@ impl Api {
 }
 
 pub const MATCH_CONTACTS: &str = "
-    select
+{
+   let $user_id = $user_id_value;
+   let $registered_phones = array::intersect(
+        (select phone from contact_phone where user_id=$user_id).phone,
+        (select (value) as value from contact).value
+   );
+   return select
         nickname,
         phone,
-        (IF phone in array::intersect((select phone from contact_phone).phone, (select (value) as value from contact).value) THEN 'Регистрирани' ELSE 'Не регистрирани' END) as section
+        (IF phone in  $registered_phones THEN 'Регистрирани' ELSE 'Не регистрирани' END) as section
     from contact_phone
     where user_id = $user_id;
+}
     ";
