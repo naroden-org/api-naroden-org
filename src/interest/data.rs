@@ -1,5 +1,3 @@
-use poem::error::ResponseError;
-use poem::http::StatusCode;
 use poem_openapi::{ApiResponse, Object};
 use poem_openapi::payload::Json;
 use serde::{Deserialize, Serialize};
@@ -80,13 +78,3 @@ pub struct Statistics {
     pub forbidden: i32,
     pub allowed: i32,
 }
-
-struct DbError(surrealdb::Error);
-
-impl ResponseError for DbError {
-    fn status(&self) -> StatusCode {
-        todo!()
-    }
-}
-
-

@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use poem::{Request, Result};
 use poem::web::Data;
 use poem_openapi::{OpenApi};
@@ -15,16 +14,8 @@ pub struct Api;
 impl Api {
     #[protect("USER")]
     #[oai(path = "/private/v1/partners", method = "get")]
-    async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetPartnersResponse> {
-        let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
-
-        //GET /v1/partners
-       // {
-        //    partners: [{
-       //         image_url: url
-       //         buttons: (from news)
-      //      }]
-        //}
+    async fn get(&self, _db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetPartnersResponse> {
+        let _claims = raw_request.extensions().get::<JwtClaims>().unwrap();
 
         let response = GetPartners {
             partners: vec![],
@@ -33,12 +24,3 @@ impl Api {
         Ok(GetPartnersResponse::Ok(Json(response)))
     }
 }
-
-pub const MATCH_CONTACTS: &str = "
-    select
-        nickname,
-        phone,
-        (IF phone in array::intersect((select phone from contact_phone).phone, (select (value) as value from contact).value) THEN 'Регистрирани' ELSE 'Не регистрирани' END) as section
-    from contact_phone
-    where user_id = $user_id;
-    ";

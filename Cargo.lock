@@ -146,14 +146,13 @@ checksum = "ea50b14b7a4b9343f8c627a7a53c52076482bd4bdad0a24fd3ec533ed616cc2c"
 
 [[package]]
 name = "api-naroden-org"
-version = "0.0.21"
+version = "0.0.22"
 dependencies = [
  "argon2",
  "base64 0.21.7",
  "chrono",
  "envconfig",
  "jsonwebtoken",
- "log",
  "once_cell",
  "poem",
  "poem-grants",
@@ -163,6 +162,7 @@ dependencies = [
  "strum_macros",
  "surrealdb",
  "tokio",
+ "tokio-metrics",
  "tracing",
  "tracing-subscriber",
 ]
@@ -3776,6 +3776,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.79",
+]
+
+[[package]]
+name = "tokio-metrics"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eace09241d62c98b7eeb1107d4c5c64ca3bd7da92e8c218c153ab3a78f9be112"
+dependencies = [
+ "futures-util",
+ "pin-project-lite",
+ "tokio-stream",
 ]
 
 [[package]]

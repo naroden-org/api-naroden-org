@@ -13,11 +13,9 @@ use crate::jwt::data::PostJwtResponse::BadRequest;
 use poem::{Request, Result};
 use poem::web::Data;
 use poem_openapi::payload::Json;
-use surrealdb::err::Error::IndexExists;
 use surrealdb::sql::Thing;
-use tracing::{event, Level};
+use crate::contact::api::normalize_phone_number;
 use crate::jwt::service::issue_jwt;
-use crate::user;
 use crate::user::query::CREATE_USER_QUERY;
 
 pub struct Api;
@@ -41,17 +39,19 @@ impl Api {
             Some(email) => { email.to_string() }
         };
 
+        let phone_code: String = match &request.phone_code {
+            None => { "".to_string() }
+            Some(phone_code) => { phone_code.to_string() }
+        };
+
         let phone: String = match &request.phone {
             None => { "".to_string() }
-            Some(phone) => { phone.to_string() }
+            Some(phone) => {
+                normalize_phone_number(phone, &phone_code)
+            }
         };
 
-        let phone_code: i32 = match &request.phone_code {
-            None => { 0 }
-            Some(phone_code) => { phone_code.to_owned() }
-        };
-
-        let create_user_response = db
+        let mut create_user_response = db
             .query(CREATE_USER_QUERY)
             .bind(("first_name", request.first_name.to_owned()))
             .bind(("last_name", request.last_name.to_owned()))
@@ -67,6 +67,7 @@ impl Api {
                 response
             }
             Err(error) => {
+                dbg!(error);
                 return Ok(BadRequest(Json(create_error(ApiError::GeneralError))))
             }
         };
@@ -75,18 +76,19 @@ impl Api {
         if !data.is_empty() {
             match serde_json::to_string(&data) {
                 Ok(error) => {
-                    if(error.contains("Database index `unique_contact_value` already contains"))
+                    if error.contains("Database index `unique_contact_value` already contains")
                     {
-                        if (email.len() > 0  && error.contains(&email)) {
+                        if email.len() > 0  && error.contains(&email) {
                             return Ok(BadRequest(Json(create_error(ApiError::AlreadyUsedEmail))))
                         }
-                        if (phone.len() > 0 && error.contains(&phone)) {
+                        if phone.len() > 0 && error.contains(&phone) {
                             return Ok(BadRequest(Json(create_error(ApiError::AlreadyUsedPhone))))
                         }
                     }
                 }
                 Err(e) => {
                     // event!(Level::ERROR, e);
+                    dbg!(e);
                     return Ok(BadRequest(Json(create_error(ApiError::GeneralError))))
                 }
             }
@@ -116,6 +118,8 @@ impl Api {
             .bind(("user", user_id))
             .await.expect("error").take(0).expect("error");
 
+
+
         match user {
             None => Ok(GetUserResponse::NotFound(Json(create_error(ApiError::GeneralError)))),
             Some(user) => {
@@ -139,6 +143,6 @@ const GET_USER_INFO: &str = "
         ->owns_contact[WHERE is_email]->contact.value[0][0] as email,
         first_name,
         last_name,
-        phone_cone
+        phone_code
     FROM ONLY $user;
 ";

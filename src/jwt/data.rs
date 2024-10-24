@@ -30,12 +30,13 @@ pub struct JwtClaims {
 #[oai(rename_all = "camelCase")]
 pub struct PostJwtRequest {
     pub user_identifier: String,
+    #[serde(skip_serializing)]
     pub password: String,
 }
 
 #[derive(strum_macros::Display)]
 pub enum UserRole {
-    ADMIN,
+    // ADMIN,
     USER,
     NONE,
 }

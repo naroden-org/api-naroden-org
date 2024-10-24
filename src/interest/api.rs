@@ -6,7 +6,7 @@ use poem_openapi::OpenApi;
 use poem_openapi::param::{Path};
 use poem_openapi::payload::Json;
 use surrealdb::engine::remote::ws::Client;
-use surrealdb::sql::{Id, Thing};
+use surrealdb::sql::{Thing};
 use surrealdb::Surreal;
 use crate::error::data::{create_error, ApiError};
 use crate::interest::data::{DbInterest, DbInterestStatistics, DbHasInterest, GetInterest, GetInterestResponse, GetInterests, GetInterestsResponse, Interest, PatchInterestRequest, Statistics};
@@ -35,7 +35,7 @@ impl Api {
 
 
         match interests {
-            Some(dbInterests) => Ok(GetInterestsResponse::Ok(Json(self.create_interests_response(dbInterests, sections)))),
+            Some(db_interests) => Ok(GetInterestsResponse::Ok(Json(self.create_interests_response(db_interests, sections)))),
             None => Ok(GetInterestsResponse::GeneralError(Json(create_error(ApiError::GeneralError)))),
         }
     }
@@ -81,22 +81,22 @@ impl Api {
 
         match interest {
             None => { Ok(GetInterestResponse::GeneralError(Json(create_error(ApiError::GeneralError)))) }
-            Some(dbInterest) => {
+            Some(db_interest) => {
                 let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
                 let user_id: Thing = Thing::from_str(format!("user:{}", claims.sub.to_owned()).as_str()).unwrap();
 
                 let relation: Option<DbHasInterest> = db.query(GET_INTEREST_STATUS_QUERY)
                     .bind(("user", user_id))
-                    .bind(("interest", dbInterest.id.clone()))
+                    .bind(("interest", db_interest.id.clone()))
                     .await.expect("error").take(0).expect("error");
                 let interest_status: i32 = if relation.is_none() {
-                    dbInterest.default_status
+                    db_interest.default_status
                 } else {
                     relation.unwrap().status
                 };
 
                 let interest_statistics: Vec<DbInterestStatistics> = db.query(GET_INTEREST_STATISTICS_QUERY)
-                    .bind(("interest", dbInterest.id))
+                    .bind(("interest", db_interest.id))
                     .await.expect("error").take(0).expect("error");
                 let mut all_users_total: Statistics = Statistics {
                     section: "Всички потребители".to_string(),
@@ -117,8 +117,8 @@ impl Api {
                 let response: GetInterest = GetInterest {
                     stats: vec![all_users_total],
                     status: interest_status,
-                    name: dbInterest.name,
-                    description: dbInterest.description,
+                    name: db_interest.name,
+                    description: db_interest.description,
                 };
 
                 return Ok(GetInterestResponse::Ok(Json(response)))

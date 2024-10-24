@@ -1,9 +1,10 @@
+use std::any::Any;
 use std::collections::HashSet;
 use envconfig::Envconfig;
 use jsonwebtoken::{Algorithm, decode, DecodingKey, Validation};
 use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server, Request, IntoResponse};
 use poem::http::StatusCode;
-use poem::middleware::{CatchPanic, PanicHandler, Tracing, RequestId};
+use poem::middleware::{CatchPanic, Tracing, RequestId};
 use poem_grants::GrantsMiddleware;
 use poem_openapi::{OpenApiService};
 use poem_openapi::payload::Json;
@@ -12,7 +13,6 @@ use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
 use crate::error::data::{create_error, ApiError};
 use crate::jwt::data::{JwtClaims, UserRole};
-use poem::Endpoint;
 use tracing_subscriber::filter::LevelFilter;
 
 mod error;
@@ -78,12 +78,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_max_level(LevelFilter::INFO)
         .init();
 
-
     let apis = (user::api::Api, jwt::api::Api, news::api::Api, interest::api::Api, survey::api::Api, contact::api::Api, partner::api::Api, statistic::api::Api);
-    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.21");
+    let api_service = OpenApiService::new(apis, "api.naroden.org", "0.0.22");
 
 
-    let panic_handler = CatchPanic::new().with_handler(|_| {
+    let panic_handler = CatchPanic::new().with_handler(|e:  Box<dyn Any + Send>| {
+        dbg!(e);
         Json(create_error(ApiError::GeneralError))
             .with_status(StatusCode::INTERNAL_SERVER_ERROR)
     });
@@ -94,17 +94,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server = server
         .with(GrantsMiddleware::with_extractor(extract))
         .with(Cors::new())
-        .with(Tracing)
         .with(panic_handler)
-        .with(RequestId::new());
-
+        .with(Tracing)
+        .with(RequestId::with_header_name("x-request-id"));
 
     let route = Route::new()
         .nest("/", server)
         .nest("/docs", swagger_ui)
         .data(db);
 
-    println!("Starting api.naroden.org v0.0.21");
+    println!("Starting api.naroden.org v0.0.22");
     println!("service calls: http://localhost:3001");
     println!("documentation: http://localhost:3001/docs");
 
@@ -140,4 +139,5 @@ async fn extract(req: &mut Request) -> Result<HashSet<String>> {
         }
     }
 }
+
 

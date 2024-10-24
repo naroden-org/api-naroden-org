@@ -44,7 +44,7 @@ pub async fn issue(db: Data<&Surreal<Client>>, credentials: Json<PostJwtRequest>
         .to_string();
 
     if password_hash != user.password.unwrap() {
-        panic!("wrong password!")
+        return None;
     }
 
     issue_jwt(user.id.unwrap().id.to_string())

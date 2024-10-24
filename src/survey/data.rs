@@ -20,6 +20,7 @@ pub struct AllSurveys {
 
 #[derive(Object, Serialize)]
 pub struct SurveyInfo {
+    pub id: String,
     pub name: String,
     pub section: String,
 }

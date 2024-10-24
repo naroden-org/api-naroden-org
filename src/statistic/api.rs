@@ -1,11 +1,9 @@
-use std::str::FromStr;
 use poem::{Request, Result};
 use poem::web::Data;
 use poem_openapi::{OpenApi};
 use poem_openapi::payload::Json;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::Surreal;
-use crate::jwt::data::JwtClaims;
 use crate::statistic::data::{DbStatistic, GetStatistics, GetStatisticsResponse, Statistic};
 
 pub struct Api;
@@ -15,7 +13,7 @@ pub struct Api;
 impl Api {
     #[protect("USER")]
     #[oai(path = "/private/v1/statistics/coverage", method = "get")]
-    async fn get(&self, db: Data<&Surreal<Client>>, raw_request: &Request) -> Result<GetStatisticsResponse> {
+    async fn get(&self, db: Data<&Surreal<Client>>, _raw_request: &Request) -> Result<GetStatisticsResponse> {
         let new_user_statistic: Vec<DbStatistic> = db.query(NEW_USER_STATISTICS)
             .await.expect("error").take(0).expect("error");
 
