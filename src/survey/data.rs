@@ -1,6 +1,7 @@
 use poem_openapi::{ApiResponse, Object};
 use poem_openapi::payload::Json;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use surrealdb::sql::Thing;
 use crate::error::data::ErrorResponse;
 
 #[derive(ApiResponse)]
@@ -25,6 +26,13 @@ pub struct SurveyInfo {
     pub section: String,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct DbSurveyInfo {
+    pub id: Thing,
+    pub name: String,
+    pub questions: Vec<Thing>,
+}
+
 #[derive(ApiResponse)]
 pub(crate) enum GetSurveyResponse {
     #[oai(status = 200)]
@@ -44,11 +52,20 @@ pub struct Survey {
 pub struct Question {
     pub id: String,
     pub text: String,
-    #[oai(rename = "type")]
-    pub question_type: String,
-    pub options: Vec<String>,
+    pub r#type: String,
+    pub options: Option<Vec<String>>,
     pub answers: Option<Vec<String>>,
     pub editable: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct DbQuestion {
+    pub id: Thing,
+    pub text: String,
+    pub r#type: String,
+    pub options: Option<Vec<String>>,
+    pub editable: bool,
+    pub survey_id: Thing,
 }
 
 #[derive(Object, Serialize)]
