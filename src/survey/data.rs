@@ -68,6 +68,14 @@ pub struct DbQuestion {
     pub survey_id: Thing,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct DbAnswer {
+    pub id: Thing,
+    pub answers: Vec<String>,
+    pub user_id: Thing,
+    pub question_id: Thing,
+}
+
 #[derive(Object, Serialize)]
 #[oai(rename_all = "camelCase")]
 pub struct PostSurveyAnswerRequest {
