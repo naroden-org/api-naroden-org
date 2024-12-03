@@ -10,7 +10,7 @@ services:
       - surrealdb
 
   surrealdb:
-    image: surrealdb/surrealdb:v2.0.4
+    image: surrealdb/surrealdb:v2.1.2
     container_name: surrealdb
     restart: unless-stopped
     command: start --user ${DB_USERNAME} --pass ${DB_PASSWORD} rocksdb:/data/api-naroden-org.db

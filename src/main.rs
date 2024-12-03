@@ -103,7 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/docs", swagger_ui)
         .data(db);
 
-    println!("Starting api.naroden.org v0.0.23");
+    println!("Starting api.naroden.org v0.0.25");
     println!("service calls: http://localhost:3001");
     println!("documentation: http://localhost:3001/docs");
 
