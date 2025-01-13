@@ -1,14 +1,15 @@
 [package]
 name = "api-naroden-org"
-version = "0.0.26"
+version = "0.1.0"
 readme = "README.md"
 edition = "2021"
 
 [dependencies]
-poem = { version = "3.1.1", features = ["requestid"] }
-poem-openapi = { version = "5.1.2", features = ["swagger-ui"] }
-poem-grants = "3.0.1"
-tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread"] }
+# web framework
+tokio = { version = "1.37.0", features = ["full"] }
+axum = "0.6"
+teloxide = { version = "0.13", features = ["macros"] }
+
 serde_json = "1.0.116"
 serde = { version = "1.0.199", features = ["derive"] }
 surrealdb = { version = "2.1.2", features = ["protocol-http"] }
@@ -17,8 +18,11 @@ envconfig = "0.10.0"
 jsonwebtoken = "9.3.0"
 chrono = "0.4.38"
 strum_macros = "0.26.4"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-tracing = "0.1.40"
+async-trait = "0.1"
+
+[dev-dependencies]
+anyhow = "1"
+httpc-test = "0.1.1"
 
 [profile.release]
 strip = true  # Automatically strip symbols from the binary.
