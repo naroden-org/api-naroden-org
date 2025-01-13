@@ -1,8 +1,9 @@
-use std::net::SocketAddr;
-use axum::{middleware, Router};
+use axum::{Router};
 use axum::routing::{get, patch, post, put};
+use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
 use crate::error::NarodenError;
-use crate::web::{mw};
+use crate::web::middleware::authorization;
 use crate::web::route::contact::{create_contact, retrieve_contacts};
 use crate::web::route::interest::{get_all_interests, retrieve_interest, update_interest};
 use crate::web::route::jwt::issue_jwt;
@@ -14,17 +15,16 @@ use crate::web::route::user::{create_user, retrieve_user_profile};
 pub type NarodenResult<T> = Result<T, NarodenError>;
 
 pub async fn start() {
-    let address = SocketAddr::from(([127, 0, 0, 1], 3001));
-    axum::Server::bind(&address)
-        .serve(create_routes().into_make_service())
-        .await
-        .unwrap();
+    let listener = TcpListener::bind("0.0.0.0:3001").await.unwrap();
+    axum::serve(listener, create_routes()).await.unwrap();
 }
 
 fn create_routes() -> Router {
     let public_routes = Router::new()
         .route("/public/v1/jwt", post(issue_jwt))
-        .route("/public/v1/users", post(create_user));
+        .route("/public/v1/users", post(create_user))
+        .layer(CorsLayer::permissive());
+
 
     let private_routes = Router::new()
         .route("/private/v1/profile", get(retrieve_user_profile))
@@ -39,10 +39,13 @@ fn create_routes() -> Router {
         .route("/private/v1/surveys", get(retrieve_all_surveys))
         .route("/private/v1/surveys/:id", get(retrieve_survey))
         .route("/private/v1/questions/:id/answers", post(create_survey_answer))
-        .layer(middleware::from_fn(mw::authorization::authorize));
+        .layer(axum::middleware::from_fn(authorization::authorize))
+        .layer(CorsLayer::permissive());
+
 
     let admin_routes = Router::new()
-        .route("/admin/v1/news/:id", put(update_news));
+        .route("/admin/v1/news/:id", put(update_news))
+        .layer(CorsLayer::permissive());
 
     Router::new()
         .merge(public_routes)

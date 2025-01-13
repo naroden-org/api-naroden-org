@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use axum::body::Body;
 use axum::extract::{FromRequestParts};
 use axum::http::{HeaderMap, HeaderValue, Request};
 use axum::http::request::Parts;
@@ -18,7 +19,7 @@ struct SecretConfig {
     pub jwt_hs256_key: String,
 }
 
-pub async fn authorize<B>(context: NarodenResult<NarodenContext>, req: Request<B>, next: Next<B>) -> NarodenResult<Response> {
+pub async fn authorize(context: NarodenResult<NarodenContext>, req: Request<Body>, next: Next) -> NarodenResult<Response> {
     context?;
     Ok(next.run(req).await)
 }
