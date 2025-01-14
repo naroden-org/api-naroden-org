@@ -1,5 +1,26 @@
+use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use surrealdb::sql::Thing;
+use crate::data::database::NARODEN_DB;
+
+pub async fn get_user_info(user_id: &str) -> Option<DbUser>  {
+    let user_id: Thing = Thing::from_str(format!("user:{}", user_id).as_str()).unwrap();
+
+    NARODEN_DB.query(GET_USER_INFO)
+        .bind(("user", user_id))
+        .await.expect("error").take(0).expect("error")
+}
+
+const GET_USER_INFO: &str = "
+    SELECT
+        ->owns_contact[WHERE is_phone]->contact.value[0][0] as phone,
+        ->owns_contact[WHERE is_email]->contact.value[0][0] as email,
+        first_name,
+        last_name,
+        phone_code
+    FROM ONLY $user;
+";
+
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DbUser {

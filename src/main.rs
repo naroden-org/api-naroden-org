@@ -1,8 +1,9 @@
 mod web;
 mod data;
 mod error;
-
 mod context;
+mod service;
+mod contract;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
