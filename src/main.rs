@@ -7,7 +7,7 @@ mod contract;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Starting api.naroden.org v0.1.1");
+    println!("Starting api.naroden.org v0.1.2");
     println!("service calls: http://localhost:3001");
     println!("documentation: http://localhost:3001/docs");
 

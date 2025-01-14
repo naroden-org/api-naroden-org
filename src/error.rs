@@ -1,6 +1,15 @@
 use std::fmt::{Debug, Display, Formatter};
+use axum::body::Body;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NarodenErrorResponse {
+    pub code: String,
+    pub description: String,
+}
 
 #[derive(Debug)]
 pub enum NarodenError {
@@ -55,7 +64,16 @@ impl std::error::Error for NarodenError {
 }
 
 impl IntoResponse for NarodenError {
-    fn into_response(self) -> Response {
-        (self.status_code(), self.message()).into_response()
+    fn into_response(self) -> Response<Body> {
+        let error = NarodenErrorResponse {
+            code: self.code().to_string(),
+            description: self.message().to_string(),
+        };
+
+        Response::builder()
+            .status(self.status_code())
+            .body(Body::from(serde_json::to_string(&error).unwrap()))
+            .unwrap()
+
     }
 }
