@@ -18,6 +18,7 @@ pub enum NarodenError {
     InvalidCredentials,
     MissingAuthorizationHeader,
     GeneralError,
+    DatabaseError,
 }
 
 impl NarodenError {
@@ -28,6 +29,7 @@ impl NarodenError {
             NarodenError::InvalidCredentials => StatusCode::UNAUTHORIZED, // 401
             NarodenError::MissingAuthorizationHeader => StatusCode::UNAUTHORIZED, // 401
             NarodenError::GeneralError => StatusCode::INTERNAL_SERVER_ERROR, // 500
+            NarodenError::DatabaseError => StatusCode::INTERNAL_SERVER_ERROR, // 500
 
         }
     }
@@ -39,6 +41,7 @@ impl NarodenError {
             NarodenError::InvalidCredentials => "Login failed",
             NarodenError::MissingAuthorizationHeader => "Missing authorization header",
             NarodenError::GeneralError => "General error",
+            NarodenError::DatabaseError => "Database error",
         }
     }
 
@@ -46,6 +49,7 @@ impl NarodenError {
         match *self {
             NarodenError::AlreadyUsedPhone => "4001",
             NarodenError::AlreadyUsedEmail => "4002",
+            NarodenError::DatabaseError => "1003",
             NarodenError::MissingAuthorizationHeader => "1002",
             NarodenError::InvalidCredentials => "1001",
             NarodenError::GeneralError => "1000",
@@ -75,5 +79,13 @@ impl IntoResponse for NarodenError {
             .body(Body::from(serde_json::to_string(&error).unwrap()))
             .unwrap()
 
+    }
+}
+
+impl From<surrealdb::Error> for NarodenError {
+    fn from(error: surrealdb::Error) -> Self {
+        eprintln!("{error}");
+        // TODO: specify errors
+        Self::DatabaseError
     }
 }

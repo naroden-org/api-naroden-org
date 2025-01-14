@@ -6,13 +6,12 @@ use crate::data::news::{DbNews, DbNewsButton};
 use crate::error::NarodenError;
 use crate::web::server::NarodenResult;
 
-pub async fn get_all_news(Query(_id): Query<String>, Query(_count): Query<i32>) -> NarodenResult<Json<GetAllNews>> {
+pub async fn get_all_news() -> NarodenResult<Json<GetAllNews>> {
+    // TODO: add Query(_id): Query<Option<String>>, Query(_count): Query<Option<i32>>
     // let claims = raw_request.extensions().get::<JwtClaims>().unwrap();
     // TODO: implement filter by ID and filter by count from querry params!!!
     // TODO: set interests to news
-    let news: Vec<DbNews> = NARODEN_DB.query("SELECT * FROM news")
-        // .bind(("user_id", claims.sub.to_owned()))
-        .await.expect("error").take(0).expect("error");
+    let news: Vec<DbNews> = NARODEN_DB.select("news").await?;
 
     let mut data: Vec<NewsItem> = vec![];
     for db_news in &news {
