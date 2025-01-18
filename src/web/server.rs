@@ -1,7 +1,12 @@
-use axum::{Router};
+use axum::Router;
+use axum::body::Body;
+use axum::http::{HeaderName, Request};
 use axum::routing::{get, patch, post, put};
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
+use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
+use tower_http::trace::{DefaultOnFailure, DefaultOnResponse, TraceLayer};
+use tracing::Level;
 use crate::error::NarodenError;
 use crate::web::middleware::authorization;
 use crate::web::route::contact::{create_contact, retrieve_contacts};
@@ -20,9 +25,21 @@ pub async fn start() {
 }
 
 fn create_routes() -> Router {
+    let x_request_id = HeaderName::from_static("x-request-id");
+
     let public_routes = Router::new()
         .route("/public/v1/jwt", post(issue_jwt))
         .route("/public/v1/users", post(create_user))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &Request<Body>| {
+                    let request_id = request.headers().get("x-request-id");
+                    tracing::info_span!("request_id", "{}", request_id.unwrap().to_str().unwrap())
+                })
+                .on_response(DefaultOnResponse::new().level(Level::INFO))
+                .on_failure(DefaultOnFailure::new().level(Level::ERROR)))
+        .layer(PropagateRequestIdLayer::new(x_request_id.clone()))
+        .layer(SetRequestIdLayer::new(x_request_id.clone(), MakeRequestUuid))
         .layer(CorsLayer::permissive());
 
 
@@ -34,14 +51,23 @@ fn create_routes() -> Router {
         .route("/private/v1/interests", get(get_all_interests))
         .route("/private/v1/interests/:id", get(retrieve_interest))
         .route("/private/v1/interests/:id", patch(update_interest))
-        .route("/private/v1/news", get(get_all_news))
         .route("/private/v1/news/:id", get(get_single_news))
         .route("/private/v1/surveys", get(retrieve_all_surveys))
         .route("/private/v1/surveys/:id", get(retrieve_survey))
         .route("/private/v1/questions/:id/answers", post(create_survey_answer))
+        .route("/private/v1/news", get(get_all_news))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &Request<Body>| {
+                    let request_id = request.headers().get("x-request-id");
+                    tracing::info_span!("request_id", "{}", request_id.unwrap().to_str().unwrap())
+                })
+                .on_response(DefaultOnResponse::new().level(Level::INFO))
+                .on_failure(DefaultOnFailure::new().level(Level::ERROR)))
+        .layer(PropagateRequestIdLayer::new(x_request_id.clone()))
+        .layer(SetRequestIdLayer::new(x_request_id.clone(), MakeRequestUuid))
         .layer(axum::middleware::from_fn(authorization::authorize))
         .layer(CorsLayer::permissive());
-
 
     let admin_routes = Router::new()
         .route("/admin/v1/news/:id", put(update_news))
@@ -52,4 +78,3 @@ fn create_routes() -> Router {
         .merge(private_routes)
         .merge(admin_routes)
 }
-

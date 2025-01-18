@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use surrealdb::sql::Thing;
 use crate::context::NarodenContext;
 use crate::data::database::NARODEN_DB;
-use crate::data::survey::{DbAnswer, DbQuestion, DbSurveyInfo};
+use crate::data::model::survey::{DbAnswer, DbQuestion, DbSurveyInfo};
 use crate::web::server::NarodenResult;
 
 pub async fn retrieve_all_surveys() -> NarodenResult<Json<AllSurveys>> {

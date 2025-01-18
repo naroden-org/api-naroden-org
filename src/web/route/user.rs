@@ -9,7 +9,7 @@ use surrealdb::sql::Thing;
 use surrealdb::{Error};
 use crate::context::NarodenContext;
 use crate::data::database::NARODEN_DB;
-use crate::data::user::{DbUser, User};
+use crate::data::model::user::{DbUser, User};
 use crate::error::NarodenError;
 use crate::web::route::jwt::{create_jwt, Jwt};
 use crate::web::server::NarodenResult;

@@ -1,7 +1,7 @@
 use crate::context::NarodenContext;
 use crate::contract::contact::{Contact, ContactPhoneRequest, GetUserContactsResponse, PostContactsRequest};
-use crate::data::contact::{get_user_contacts, store_user_contacts, DbContact, DbContactPhone};
-use crate::data::user::{get_user_info, DbUser};
+use crate::data::model::contact::{get_user_contacts, store_user_contacts, DbContact, DbContactPhone};
+use crate::data::model::user::{get_user_info, DbUser};
 use crate::web::route::user::normalize_phone_number;
 
 pub async fn get_contacts(context: NarodenContext) -> GetUserContactsResponse {

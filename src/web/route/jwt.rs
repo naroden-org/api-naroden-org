@@ -6,7 +6,7 @@ use argon2::{Argon2, PasswordHasher};
 use chrono::{offset, Days};
 use jsonwebtoken::{Algorithm, encode, EncodingKey, Header};
 use crate::data::database::NARODEN_DB;
-use crate::data::user::User;
+use crate::data::model::user::User;
 use crate::error::NarodenError;
 use crate::web::server::NarodenResult;
 

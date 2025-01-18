@@ -1,8 +1,9 @@
-use axum::extract::{Path, Query};
+use axum::extract::{Path};
 use axum::Json;
 use serde::{Deserialize, Serialize};
+use tracing::{info, Level};
 use crate::data::database::NARODEN_DB;
-use crate::data::news::{DbNews, DbNewsButton};
+use crate::data::model::news::{DbNews, DbNewsButton};
 use crate::error::NarodenError;
 use crate::web::server::NarodenResult;
 
@@ -12,6 +13,8 @@ pub async fn get_all_news() -> NarodenResult<Json<GetAllNews>> {
     // TODO: implement filter by ID and filter by count from querry params!!!
     // TODO: set interests to news
     let news: Vec<DbNews> = NARODEN_DB.select("news").await?;
+
+    tracing::span!(Level::INFO, "getting news 1111111111");
 
     let mut data: Vec<NewsItem> = vec![];
     for db_news in &news {
@@ -27,6 +30,8 @@ pub async fn get_all_news() -> NarodenResult<Json<GetAllNews>> {
     let response = GetAllNews {
         news: data,
     };
+
+    info!("got all news 2222222222222");
 
     Ok(Json(response))
 }

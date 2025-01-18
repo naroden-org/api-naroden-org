@@ -6,6 +6,8 @@ use surrealdb::Surreal;
 
 pub static NARODEN_DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
+pub static NARODEN_DB_LOG: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
+
 #[derive(Envconfig)]
 struct DbSecretConfig {
     #[envconfig(from = "DB_HOST")]
@@ -22,10 +24,14 @@ pub async fn signin() {
     let config = DbSecretConfig::init_from_env().unwrap();
 
     if config.db_host.contains("localhost") {
-        NARODEN_DB.connect::<Ws>(config.db_host)
+        NARODEN_DB.connect::<Ws>(config.db_host.clone())
+            .await.expect("Could not connect to db");
+        NARODEN_DB_LOG.connect::<Ws>(config.db_host.clone())
             .await.expect("Could not connect to db");
     } else {
-        NARODEN_DB.connect::<Wss>(config.db_host)
+        NARODEN_DB.connect::<Wss>(config.db_host.clone())
+            .await.expect("Could not connect to db");
+        NARODEN_DB_LOG.connect::<Wss>(config.db_host.clone())
             .await.expect("Could not connect to db");
     };
 
@@ -34,9 +40,19 @@ pub async fn signin() {
         password: config.db_password.as_str() })
         .await.expect("Could not sign in");
 
+    NARODEN_DB_LOG.signin(Root {
+        username: config.db_username.as_str(),
+        password: config.db_password.as_str() })
+        .await.expect("Could not sign in");
+
     NARODEN_DB
         .use_ns("api")
         .use_db("prod")
+        .await.expect("Could not use namespace & database");
+
+    NARODEN_DB_LOG
+        .use_ns("naroden")
+        .use_db("api-logs")
         .await.expect("Could not use namespace & database");
 }
 

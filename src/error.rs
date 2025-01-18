@@ -1,8 +1,10 @@
 use std::fmt::{Debug, Display, Formatter};
 use axum::body::Body;
-use axum::http::StatusCode;
+use axum::BoxError;
+use axum::http::{Method, StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -88,4 +90,16 @@ impl From<surrealdb::Error> for NarodenError {
         // TODO: specify errors
         Self::DatabaseError
     }
+}
+
+pub async fn handle_error(    method: Method,
+                              uri: Uri, err: BoxError) -> (StatusCode, String) {
+    let error = NarodenErrorResponse {
+        code: NarodenError::GeneralError.code().to_string(),
+        description: NarodenError::GeneralError.message().to_string(),
+    };
+
+    error!(err);
+
+    (NarodenError::GeneralError.status_code(), serde_json::to_string(&error).unwrap())
 }

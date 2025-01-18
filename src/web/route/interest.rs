@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use surrealdb::sql::Thing;
 use crate::context::NarodenContext;
 use crate::data::database::NARODEN_DB;
-use crate::data::interest::{DbHasInterest, DbInterest, DbInterestStatistics};
+use crate::data::model::interest::{DbHasInterest, DbInterest, DbInterestStatistics};
 use crate::error::NarodenError;
 use crate::web::server::NarodenResult;
 

@@ -1,7 +1,7 @@
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use crate::data::database::NARODEN_DB;
-use crate::data::statistic::DbStatistic;
+use crate::data::model::statistic::DbStatistic;
 use crate::web::server::NarodenResult;
 
 pub async fn generate_statistics() -> NarodenResult<Json<GetStatistics>> {
