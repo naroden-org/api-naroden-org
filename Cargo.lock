@@ -117,7 +117,7 @@ checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
 
 [[package]]
 name = "api-naroden-org"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "argon2",
@@ -134,7 +134,6 @@ dependencies = [
  "teloxide",
  "tokio",
  "tower-http",
- "tower-request-id",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
@@ -4577,18 +4576,6 @@ name = "tower-layer"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "121c2a6cda46980bb0fcd1647ffaf6cd3fc79a013de288782836f6df9c48780e"
-
-[[package]]
-name = "tower-request-id"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "357a1f99dd439c1aa9ebbaf9c6431b41c05a26bf137e9e92879941bdac5cb66d"
-dependencies = [
- "http 1.1.0",
- "tower-layer",
- "tower-service",
- "ulid",
-]
 
 [[package]]
 name = "tower-service"

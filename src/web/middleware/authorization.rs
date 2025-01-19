@@ -30,12 +30,17 @@ impl<S: Send + Sync> FromRequestParts<S> for NarodenContext {
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> NarodenResult<Self> {
         let headers = parts.extract::<HeaderMap>().await.unwrap();
+
+        // authorization
         let authorization_header = headers.get("authorization");
         authorization_header.ok_or(NarodenError::MissingAuthorizationHeader)?;
-
         let jwt_claims : JwtClaims = get_claims(authorization_header.unwrap());
 
-        Ok(NarodenContext::new(jwt_claims.sub, jwt_claims.role))
+        // device information
+        let device_type = headers.get("x-device-type").unwrap().to_str().unwrap().to_string();
+        let device_id = headers.get("x-device-id").unwrap().to_str().unwrap().to_string();
+
+        Ok(NarodenContext::new(jwt_claims.sub, jwt_claims.role, device_id, device_type))
     }
 }
 

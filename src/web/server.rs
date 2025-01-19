@@ -13,6 +13,7 @@ use crate::web::route::contact::{create_contact, retrieve_contacts};
 use crate::web::route::interest::{get_all_interests, retrieve_interest, update_interest};
 use crate::web::route::jwt::issue_jwt;
 use crate::web::route::news::{get_all_news, get_single_news, update_news};
+use crate::web::route::notification::create_notification_token;
 use crate::web::route::statistic::generate_statistics;
 use crate::web::route::survey::{create_survey_answer, retrieve_all_surveys, retrieve_survey};
 use crate::web::route::user::{create_user, retrieve_user_profile};
@@ -56,6 +57,7 @@ fn create_routes() -> Router {
         .route("/private/v1/surveys/:id", get(retrieve_survey))
         .route("/private/v1/questions/:id/answers", post(create_survey_answer))
         .route("/private/v1/news", get(get_all_news))
+        .route("/private/v1/notification-tokens", post(create_notification_token))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &Request<Body>| {

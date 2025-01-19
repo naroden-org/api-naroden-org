@@ -1,6 +1,6 @@
 [package]
 name = "api-naroden-org"
-version = "0.1.5"
+version = "0.1.6"
 readme = "README.md"
 edition = "2021"
 
@@ -23,7 +23,6 @@ tower-http = { version = "0.6.2", features = ["cors", "trace", "propagate-header
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter", "json"] }
 tracing-appender = "0.2.3"
-tower-request-id = "0.3.0"
 
 [dev-dependencies]
 anyhow = "1"
