@@ -37,10 +37,12 @@ impl<S: Send + Sync> FromRequestParts<S> for NarodenContext {
         let jwt_claims : JwtClaims = get_claims(authorization_header.unwrap());
 
         // device information
-        let device_type = headers.get("x-device-type").unwrap().to_str().unwrap().to_string();
-        let device_id = headers.get("x-device-id").unwrap().to_str().unwrap().to_string();
+        //let device_type = headers.get("x-device-type").unwrap().to_str().unwrap().to_string();
+        ///let device_id = headers.get("x-device-id").unwrap().to_str().unwrap().to_string();
 
-        Ok(NarodenContext::new(jwt_claims.sub, jwt_claims.role, device_id, device_type))
+        // Ok(NarodenContext::new(jwt_claims.sub, jwt_claims.role, device_id, device_type))
+
+        Ok(NarodenContext::new(jwt_claims.sub, jwt_claims.role, "TODO".to_string(), "TODO".to_string()))
     }
 }
 

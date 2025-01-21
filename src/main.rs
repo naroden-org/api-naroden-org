@@ -10,7 +10,7 @@ use tracing_appender::rolling;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Starting api.naroden.org v0.1.6");
+    println!("Starting api.naroden.org v0.1.7");
     println!("service calls: http://localhost:3001");
 
     let info_file = rolling::daily("./log", "api-naroden-org");
