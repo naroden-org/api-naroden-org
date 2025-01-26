@@ -8,6 +8,7 @@ use axum::middleware::Next;
 use axum::RequestPartsExt;
 use envconfig::Envconfig;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
+use tracing::info;
 use crate::context::NarodenContext;
 use crate::error::NarodenError;
 use crate::web::route::jwt::JwtClaims;
@@ -37,12 +38,25 @@ impl<S: Send + Sync> FromRequestParts<S> for NarodenContext {
         let jwt_claims : JwtClaims = get_claims(authorization_header.unwrap());
 
         // device information
-        //let device_type = headers.get("x-device-type").unwrap().to_str().unwrap().to_string();
-        ///let device_id = headers.get("x-device-id").unwrap().to_str().unwrap().to_string();
+        let device_provider = get_header_value("x-device-provider", &headers);
+        let device_id = get_header_value("x-device-id", &headers);
 
-        // Ok(NarodenContext::new(jwt_claims.sub, jwt_claims.role, device_id, device_type))
+        let device_model = get_header_value("x-device-model", &headers);
+        let device_os = get_header_value("x-device-os", &headers);
+        let naroden_version = get_header_value("x-naroden-version", &headers);
+        info!("x-device-model [{}] x-device-os [{}] x-naroden-version [{}]", device_model, device_os, naroden_version);
 
-        Ok(NarodenContext::new(jwt_claims.sub, jwt_claims.role, "TODO".to_string(), "TODO".to_string()))
+        Ok(NarodenContext::new(jwt_claims.sub, jwt_claims.role, device_id, device_provider))
+    }
+}
+
+fn get_header_value(header: &str, headers: &HeaderMap) -> String {
+    let result = headers.get(header);
+
+    if result.is_none() {
+        String::from("")
+    } else {
+        result.unwrap().to_str().unwrap().to_string()
     }
 }
 

@@ -117,7 +117,7 @@ checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
 
 [[package]]
 name = "api-naroden-org"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "anyhow",
  "argon2",
@@ -133,6 +133,7 @@ dependencies = [
  "surrealdb",
  "teloxide",
  "tokio",
+ "tower",
  "tower-http",
  "tracing",
  "tracing-appender",
@@ -4562,8 +4563,10 @@ checksum = "403fa3b783d4b626a8ad51d766ab03cb6d2dbfc46b1c5d4448395e6628dc9697"
 dependencies = [
  "bitflags 2.6.0",
  "bytes",
+ "futures-util",
  "http 1.1.0",
  "http-body 1.0.1",
+ "http-body-util",
  "pin-project-lite",
  "tower-layer",
  "tower-service",
